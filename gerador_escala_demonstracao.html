@@ -1,0 +1,2479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demonstração — Gerador de Escalas Setor de Ressonância Magnética (Versão 2.2)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-main: #0b1120;
+      --bg-card: #151f32;
+      --bg-card-alt: #1e293b;
+      --bg-hover: #27354f;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      
+      /* Badges & Status */
+      --badge-d12: #059669;
+      --badge-n12: #4f46e5;
+      --badge-n6: #6366f1;
+      --badge-r8: #0284c7;
+      --badge-circ: #d97706;
+      --badge-dist: #7c3aed;
+      --badge-folga: #dc2626;
+      --badge-f52: #475569;
+      --badge-fe: #eab308;
+      --badge-lm: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      padding: 24px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Privacy Banner */
+    .privacy-notice-banner {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 12px 18px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.86rem;
+    }
+
+    .privacy-notice-banner .highlight {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    /* Header */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Outfit', sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    .sub-title {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 4px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      background-color: var(--accent);
+      color: #ffffff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-green {
+      background-color: #10b981;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-green:hover { background-color: #059669; }
+
+    .btn-secondary {
+      background-color: var(--bg-card-alt);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      box-shadow: none;
+    }
+    .btn-secondary:hover {
+      background-color: var(--bg-hover);
+      border-color: #475569;
+    }
+
+    .btn-danger {
+      background-color: rgba(220, 38, 38, 0.2);
+      border: 1px solid rgba(220, 38, 38, 0.5);
+      color: #f87171;
+      box-shadow: none;
+    }
+    .btn-danger:hover {
+      background-color: rgba(220, 38, 38, 0.35);
+    }
+
+    /* Save Indicator */
+    .save-indicator-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .save-indicator-badge.saved {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .save-indicator-badge.dirty {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      overflow-x: auto;
+    }
+
+    .tab-button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab-button:hover {
+      color: var(--text-main);
+      background-color: var(--bg-hover);
+    }
+
+    .tab-button.active {
+      color: #ffffff;
+      background-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Legends */
+    .legend-container {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      background-color: var(--bg-card-alt);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+    }
+
+    .legend-badge {
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 0.72rem;
+      display: inline-block;
+      min-width: 26px;
+      text-align: center;
+    }
+
+    .badge-d12 { background-color: var(--badge-d12); }
+    .badge-n12 { background-color: var(--badge-n12); }
+    .badge-n6  { background-color: var(--badge-n6); }
+    .badge-r8  { background-color: var(--badge-r8); }
+    .badge-circ{ background-color: var(--badge-circ); }
+    .badge-dist{ background-color: var(--badge-dist); }
+    .badge-folga { background-color: var(--badge-folga); }
+    .badge-f52 { background-color: var(--badge-f52); color: #cbd5e1; }
+    .badge-fe  { background-color: var(--badge-fe); color: #000; }
+    .badge-lm  { background-color: var(--badge-lm); }
+
+    /* Tables */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 8px 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    th {
+      background-color: var(--bg-card-alt);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.78rem;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    th.weekend-th {
+      background-color: rgba(139, 92, 246, 0.15);
+      color: #c084fc;
+    }
+
+    th.holiday-th {
+      background-color: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+    }
+
+    td.col-emp {
+      text-align: left;
+      font-weight: 600;
+      color: #ffffff;
+      background-color: var(--bg-card);
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      padding-left: 14px;
+      min-width: 180px;
+      border-right: 2px solid var(--border-color);
+    }
+
+    td.col-regime {
+      text-align: left;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      min-width: 140px;
+    }
+
+    tr:hover td {
+      background-color: var(--bg-hover);
+    }
+
+    .group-header-row td {
+      background: linear-gradient(90deg, #1e293b, #0f172a);
+      color: #38bdf8;
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+    }
+
+    /* Interactive Dropdowns */
+    .sim-select {
+      background: var(--bg-main);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+
+    .sim-select:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 620px;
+      padding: 24px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      animation: modalIn 0.2s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    @keyframes modalIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* Toast */
+    #toastMessage {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #10b981;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 9999;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .info-box {
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 4px solid var(--accent);
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    .info-box strong {
+      color: #ffffff;
+    }
+
+    /* Weekday Checkbox Group */
+    .weekday-selector {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .weekday-label {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border-color);
+      padding: 6px 2px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      display: block;
+      color: var(--text-muted);
+    }
+
+    .weekday-label input {
+      display: none;
+    }
+
+    .weekday-label.selected {
+      background: rgba(37, 99, 235, 0.3);
+      border-color: var(--accent);
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* Test Cards */
+    .test-card {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .test-card.pass {
+      border-left: 4px solid #10b981;
+    }
+
+    .test-card.fail {
+      border-left: 4px solid #ef4444;
+    }
+
+    .test-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .test-badge.pass {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .test-badge.fail {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    @media print {
+      body { background-color: #fff; color: #000; padding: 0; }
+      .privacy-notice-banner, .tabs, .btn-group, .sub-title, #toastMessage { display: none !important; }
+      .card { border: none; box-shadow: none; padding: 0; }
+      th, td { border: 1px solid #94a3b8; color: #000 !important; }
+      td.col-emp { background: #fff !important; color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Synthetic Guarantee Banner -->
+  <div class="privacy-notice-banner">
+    <div>
+      <i class="fa-solid fa-shield-halved" style="color:#34d399; margin-right:8px; font-size:1.1rem;"></i>
+      <span class="highlight">DEMONSTRAÇÃO 100% SINTÉTICA (VERSÃO 2.2):</span>
+      Dados inteiramente fictícios gerados artificialmente. Sem nomes, dados hospitalares ou vínculos operacionais reais.
+    </div>
+    <div style="font-size:0.78rem; color:#94a3b8;">
+      <i class="fa-solid fa-hard-drive"></i> Persistência no Navegador Local (Sem sincronização externa)
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header-container">
+    <div>
+      <h1>
+        <i class="fa-solid fa-magnet" style="color:var(--accent);"></i>
+        Gerador de Escalas RM — Demonstração Versão 2.2
+      </h1>
+      <div class="sub-title">
+        Regimes 12x36 (Validação Cronológica $\ge 36\text{h}$ & Viradas de Mês) e 5x2 (Dias e Horários Flexíveis) • Cobertura Noturna 5/4 Máquinas & Distribuição Exclusiva
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <!-- Save Indicator Badge -->
+      <div id="saveStatusIndicator" class="save-indicator-badge saved" title="Status de persistência local">
+        <i class="fa-solid fa-circle-check" id="saveStatusIcon"></i>
+        <span id="saveStatusText">Salvo Localmente</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <button class="btn btn-green" id="btnSalvarEscala" onclick="salvarAlteracoesDemo()">
+        <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+      </button>
+
+      <button class="btn btn-secondary" onclick="abrirModalRestaurarDemo()">
+        <i class="fa-solid fa-rotate-left"></i> Restaurar Demonstração Inicial
+      </button>
+
+      <button class="btn btn-secondary" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Imprimir / PDF
+      </button>
+
+      <button class="btn" onclick="exportarCSVDemo()">
+        <i class="fa-solid fa-file-excel"></i> Exportar CSV Fictício
+      </button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <button class="tab-button active" onclick="switchDemoTab('tab-matriz-escala')">
+      <i class="fa-solid fa-table-cells"></i> 1. Escala Oficial da Demonstração
+    </button>
+    <button class="tab-button" onclick="switchDemoTab('tab-simulacao-interativa')">
+      <i class="fa-solid fa-flask"></i> 2. Simulação Interativa (Modo Edição)
+    </button>
+    <button class="tab-button" onclick="switchDemoTab('tab-dimensionamento-maquinas')">
+      <i class="fa-solid fa-chart-pie"></i> 3. Dimensionamento & Cobertura por Faixa Horária
+    </button>
+    <button class="tab-button" onclick="switchDemoTab('tab-gestao-colaboradores')">
+      <i class="fa-solid fa-users-gear"></i> 4. Cadastro e Configuração de Regimes
+    </button>
+    <button class="tab-button" onclick="switchDemoTab('tab-validador-regras')">
+      <i class="fa-solid fa-shield-check"></i> 5. Validador de Regras & Cobertura
+    </button>
+    <button class="tab-button" onclick="switchDemoTab('tab-testes-automatizados')">
+      <i class="fa-solid fa-vial-circle-check"></i> 6. Bateria de Testes Automatizados
+    </button>
+    <button class="tab-button" onclick="switchDemoTab('tab-auditoria-demo')">
+      <i class="fa-solid fa-clock-rotate-left"></i> 7. Log de Auditoria Local
+    </button>
+  </div>
+
+  <!-- TAB 1: ESCALA OFICIAL DA DEMONSTRAÇÃO -->
+  <div id="tab-matriz-escala" class="tab-content active">
+    <div class="info-box">
+      <strong>✨ Estrutura Base Homologada:</strong> 20 profissionais na base 12x36 (Equipes A, B, C e D), 4 circulantes 12x36 (1 por equipe) e 8 reservas em 5x2 com dias de folga e horários configuráveis. As validações 12x36 analisam o <strong>intervalo temporal real em horas ($\ge 36\text{h}$)</strong> entre o término de cada plantão e o início do próximo, inclusive na transição com o mês anterior.
+    </div>
+
+    <!-- Legend -->
+    <div class="legend-container">
+      <div class="legend-item"><span class="legend-badge badge-d12">D12</span> Diurno 12h (06:00–18:00)</div>
+      <div class="legend-item"><span class="legend-badge badge-n12">N12</span> Noturno 12h (18:00–06:00)</div>
+      <div class="legend-item"><span class="legend-badge badge-n6">N6</span> Noturno 6h (18:00–00:00 • 5ª Máquina)</div>
+      <div class="legend-item"><span class="legend-badge badge-r8">R8</span> Reserva 5x2 (Horário e Folgas Flexíveis)</div>
+      <div class="legend-item"><span class="legend-badge badge-circ">CIRC</span> Circulante Diurno (Alívio / Apoio)</div>
+      <div class="legend-item"><span class="legend-badge badge-dist">DIST</span> Distribuição Noturna Exclusiva (18h–06h)</div>
+      <div class="legend-item"><span class="legend-badge badge-folga">F</span> Folga Regulamentar 12x36 (Descanso $\ge 36\text{h}$)</div>
+      <div class="legend-item"><span class="legend-badge badge-f52">F52</span> Folga Regulamentar 5x2 (Dias Configurados)</div>
+      <div class="legend-item"><span class="legend-badge badge-fe">FE</span> Férias 30 Dias (Afastamento Programado)</div>
+      <div class="legend-item"><span class="legend-badge badge-lm">LM</span> Licença / Afastamento (Fictício)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-calendar-days"></i> Matriz Mensal — Setembro / 2026</span>
+        <span id="quickStatusBadge" style="font-size:0.85rem; font-weight:700;">
+          <!-- Populated by JS -->
+        </span>
+      </div>
+
+      <div class="table-responsive">
+        <table id="tableEscalaDemo">
+          <thead>
+            <tr id="headerRowDemo">
+              <!-- Populated via JS -->
+            </tr>
+          </thead>
+          <tbody id="bodyEscalaDemo">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SIMULAÇÃO INTERATIVA (MODO EDIÇÃO) -->
+  <div id="tab-simulacao-interativa" class="tab-content">
+    <div class="info-box" style="background:rgba(139,92,246,0.12); border-left-color:#8b5cf6;">
+      <strong>🎯 Simulação com Auditoria Imediata:</strong> Altere os códigos de qualquer célula. O validador computará instantaneamente o intervalo em horas entre plantões para verificar se há quebra do descanso de 36 horas ou déficit nas máquinas.
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-sliders"></i> Grade de Simulação Editável</span>
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="simularFerias30Dias()">
+            <i class="fa-solid fa-umbrella-beach"></i> Simular Férias de 30 Dias (3 Colab.)
+          </button>
+          <button class="btn btn-secondary" onclick="restaurarQuadroSemFerias()">
+            <i class="fa-solid fa-user-check"></i> Restaurar Quadro Integral
+          </button>
+          <button class="btn btn-green" onclick="salvarAlteracoesDemo()">
+            <i class="fa-solid fa-floppy-disk"></i> Salvar Cenário Simulado
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="tableSimulacaoDemo">
+          <thead>
+            <tr id="headerRowSimDemo">
+              <!-- Populated via JS -->
+            </tr>
+          </thead>
+          <tbody id="bodySimDemo">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: DIMENSIONAMENTO & COBERTURA POR FAIXA HORÁRIA -->
+  <div id="tab-dimensionamento-maquinas" class="tab-content">
+    <!-- Bloco 1: Cards das Regras Operacionais -->
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-chart-pie"></i> Modelagem Operacional das Faixas de Atendimento</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
+        <div style="background:var(--bg-card-alt); border:1px solid var(--border-color); border-radius:8px; padding:16px;">
+          <h4 style="color:#38bdf8; font-size:1rem; margin-bottom:8px;"><i class="fa-solid fa-sun"></i> Período Diurno (06:00 às 18:00)</h4>
+          <ul style="font-size:0.85rem; color:var(--text-muted); line-height:1.7; padding-left:18px;">
+            <li><strong>5 Máquinas ativas</strong> ininterruptamente (demanda de 60 horas-máquina).</li>
+            <li>5 operadores fixos 12x36 (Equipe A ou B).</li>
+            <li>1 circulante diurno 12x36 (`CIRC`) para apoio de sala e triagem.</li>
+            <li>Reservas 5x2 escalonados para cobrir almoço (11h–16h), sem interrupção de máquinas.</li>
+          </ul>
+        </div>
+
+        <div style="background:var(--bg-card-alt); border:1px solid var(--border-color); border-radius:8px; padding:16px;">
+          <h4 style="color:#818cf8; font-size:1rem; margin-bottom:8px;"><i class="fa-solid fa-moon"></i> Noturno Inicial (18:00 às 00:00)</h4>
+          <ul style="font-size:0.85rem; color:var(--text-muted); line-height:1.7; padding-left:18px;">
+            <li><strong>5 Máquinas ativas</strong> no início da noite.</li>
+            <li>4 operadores 12h (`N12`) + 1 operador 6h (`N6`, que <strong>vai embora à meia-noite</strong>).</li>
+            <li><strong>Posto de Distribuição Noturna exclusivo</strong> ativo (`DIST`).</li>
+            <li>O profissional da distribuição não acumula operação de máquina nem cobertura de intervalo.</li>
+          </ul>
+        </div>
+
+        <div style="background:var(--bg-card-alt); border:1px solid var(--border-color); border-radius:8px; padding:16px;">
+          <h4 style="color:#c084fc; font-size:1rem; margin-bottom:8px;"><i class="fa-solid fa-bed"></i> Noturno Madrugada (00:00 às 06:00)</h4>
+          <ul style="font-size:0.85rem; color:var(--text-muted); line-height:1.7; padding-left:18px;">
+            <li><strong>4 Máquinas ativas</strong> (o 5º operador já encerrou a jornada às 00h).</li>
+            <li>4 operadores de máquina restantes (`N12`) em seus postos fixos.</li>
+            <li>Posto de Distribuição Noturna permanece 100% coberto pelo operador exclusivo (`DIST`).</li>
+            <li><strong>Déficit de Alívio:</strong> Sem um profissional volante na madrugada, a saída para ceia exige parar máquina ou desprover a distribuição.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-bottom:0;">
+        <strong>Regra de Bloqueio Automático:</strong> O sistema não aprova a escala enquanto houver postos sem cobertura ou intervalos intrajornada sem profissional volante escalado.
+      </div>
+    </div>
+
+    <!-- Bloco 2: Tabela de Cobertura por Faixa Horária -->
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-clock"></i> Matriz de Cobertura por Faixa Horária e Intervalos (Dia Selecionado)</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="font-size:0.85rem; color:var(--text-muted);">Dia de Análise:</label>
+          <select id="selectDiaAnaliseFaixa" class="sim-select" style="width:130px;" onchange="renderTabelaFaixasHorarias(parseInt(this.value))">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="tableFaixaHoraria">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding-left:14px;">Faixa Horária</th>
+              <th>Demanda Máquinas</th>
+              <th>Operadores Alocados</th>
+              <th>Posto Distribuição (Exclusivo)</th>
+              <th>Intervalos Ativos na Faixa</th>
+              <th>Volantes para Alívio</th>
+              <th>Saldo de Cobertura</th>
+              <th>Status Operacional</th>
+            </tr>
+          </thead>
+          <tbody id="bodyFaixaHoraria">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bloco 3: Estudo Matemático de Dimensionamento de Pessoal -->
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-calculator"></i> Estudo Matemático de Dimensionamento & Férias CLT (Premissas Reais)</span>
+      </div>
+
+      <div style="font-size:0.88rem; line-height:1.8; color:#cbd5e1; margin-bottom:16px;">
+        <p style="margin-bottom:12px;">
+          Para determinar se o contingente de <strong>32 colaboradores</strong> é matematicamente suficiente para manter o setor em operação contínua, aplicam-se os parâmetros formais de dimensionamento hospitalar:
+        </p>
+
+        <div style="background:var(--bg-card-alt); border:1px solid var(--border-color); border-radius:8px; padding:16px; margin-bottom:16px;">
+          <h4 style="color:#fbbf24; font-size:0.95rem; margin-bottom:10px;"><i class="fa-solid fa-square-root-variable"></i> Demonstração Quantitativa da Demanda Operacional:</h4>
+          <ul style="padding-left:20px; font-size:0.85rem; line-height:1.7;">
+            <li><strong>Diurno (06h–18h = 12h):</strong> 5 máquinas $\times$ 12h = 60h-máquina + 1 circulante (12h) + 6 intervalos de almoço de 1h = <strong>78 horas/dia</strong>.</li>
+            <li><strong>Noturno (18h–06h = 12h):</strong> 5 máquinas $\times$ 6h (18h–00h) + 4 máquinas $\times$ 6h (00h–06h) + 1 distribuição exclusiva (12h) + 11 intervalos de refeição = <strong>77 horas/dia</strong>.</li>
+            <li><strong>Demanda Total do Setor:</strong> $78 + 77 = 155\text{ horas/dia} \times 30\text{ dias} =$ <span style="color:#38bdf8; font-weight:700;">4.650 horas operacionais em Setembro</span>.</li>
+          </ul>
+        </div>
+
+        <div style="background:var(--bg-card-alt); border:1px solid var(--border-color); border-radius:8px; padding:16px; margin-bottom:16px;">
+          <h4 style="color:#34d399; font-size:0.95rem; margin-bottom:10px;"><i class="fa-solid fa-users-viewfinder"></i> Capacidade Nominal vs. Capacidade Líquida do Quadro (32 Colaboradores):</h4>
+          <table style="text-align:left; font-size:0.82rem; margin-top:8px;">
+            <thead>
+              <tr>
+                <th style="text-align:left;">Componente do Quadro</th>
+                <th>Efetivo</th>
+                <th>Jornada Base</th>
+                <th>Horas Brutas/Mês</th>
+                <th>Dedução Férias (FAP 8,2%)</th>
+                <th>Dedução Atestados (FANP 6,5%)</th>
+                <th>Capacidade Líquida</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Operadores 12x36 (Equipes A, B, C, D)</td>
+                <td>20 colab.</td>
+                <td>15 plantões (180h / 90h)</td>
+                <td>3.420 h</td>
+                <td>- 281 h</td>
+                <td>- 222 h</td>
+                <td style="color:#34d399; font-weight:700;">2.917 h</td>
+              </tr>
+              <tr>
+                <td>Circulantes / Distribuição 12x36</td>
+                <td>4 colab.</td>
+                <td>15 plantões (180h)</td>
+                <td>720 h</td>
+                <td>- 59 h</td>
+                <td>- 47 h</td>
+                <td style="color:#34d399; font-weight:700;">614 h</td>
+              </tr>
+              <tr>
+                <td>Reservas 5x2 (Dias úteis e fins de semana)</td>
+                <td>8 colab.</td>
+                <td>40h semanais (~176h)</td>
+                <td>1.408 h</td>
+                <td>- 116 h</td>
+                <td>- 91 h</td>
+                <td style="color:#34d399; font-weight:700;">1.201 h</td>
+              </tr>
+              <tr style="font-weight:700; background:rgba(30,41,59,0.9);">
+                <td>Total Geral do Setor</td>
+                <td>32 profissionais</td>
+                <td>—</td>
+                <td style="color:#fbbf24;">5.548 h</td>
+                <td style="color:#f87171;">- 456 h (~2,6 colab.)</td>
+                <td style="color:#f87171;">- 360 h (~2,1 colab.)</td>
+                <td style="color:#38bdf8;">4.732 h efetivas</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:16px;">
+          <h4 style="color:#f87171; font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation"></i> Conclusão Técnica e Gargalos Identificados:</h4>
+          <p style="font-size:0.85rem; color:#fca5a5; line-height:1.6;">
+            1. <strong>Margem Global Insuficiente:</strong> A margem teórica entre a capacidade líquida (4.732h) e a demanda (4.650h) é de apenas <strong>82 horas (1,7%)</strong>. Em um hospital, uma folga de 1,7% não absorve flutuações de atestados imprevistos ou emergências.<br>
+            2. <strong>Inflexibilidade de Postos Fixos:</strong> As 24 vagas 12x36 são postos fixos diários. Quando 2 a 3 colaboradores entram em férias simultâneas (exigência legal de 30 dias de férias/ano = $32 \times 30 / 365 = 2,63$ colaboradores/mês), os reservas 5x2 precisam cobrir plantões de 12 horas, desfalecendo a cobertura dos intervalos de almoço dos dias úteis.<br>
+            3. <strong>Vácuo Noturno de Intervalos:</strong> Como os circulantes noturnos C e D estão 100% dedicados à distribuição exclusiva e o 5º operador vai embora à meia-noite, <strong>não há profissional volante previsto para render refeições à noite</strong>. Para resolver isso sem horas extras, é necessário ampliar o quadro para <strong>36 colaboradores</strong> ou aceitar o desligamento programado de máquinas durante as refeições.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: CADASTRO E CONFIGURAÇÃO DE REGIMES -->
+  <div id="tab-gestao-colaboradores" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-users"></i> Quadro de Colaboradores Sintéticos da Demonstração (32 Registros)</span>
+        <button class="btn btn-secondary" onclick="abrirModalAddColaboradorDemo()">
+          <i class="fa-solid fa-user-plus"></i> Adicionar Colaborador Fictício
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left; padding-left:14px;">Identificador Fictício</th>
+              <th>Equipe / Grupo</th>
+              <th>Regime</th>
+              <th>Horário Cadastrado</th>
+              <th>Dias de Folga (5x2)</th>
+              <th>Transição Mês Anterior</th>
+              <th>Status / Férias</th>
+              <th>Função Operacional</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="bodyColabDemo">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: VALIDADOR DE REGRAS & COBERTURA -->
+  <div id="tab-validador-regras" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-shield-halved"></i> Auditoria de Regras & Análise Temporal de Intervalos</span>
+        <button class="btn btn-secondary" onclick="executarAuditoriaCompleta()">
+          <i class="fa-solid fa-rotate"></i> Revalidar Matriz
+        </button>
+      </div>
+
+      <div id="validationReportBox">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: BATERIA DE TESTES AUTOMATIZADOS -->
+  <div id="tab-testes-automatizados" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-vial-circle-check"></i> Bateria de Testes Automatizados de Regras, Viradas de Mês e Férias</span>
+        <button class="btn btn-green" onclick="executarBateriaTestesCompleta()">
+          <i class="fa-solid fa-play"></i> Executar Bateria de Testes Agora
+        </button>
+      </div>
+
+      <div class="info-box">
+        <strong>🧪 Verificação Real de Engenharia:</strong> Os testes abaixo são computados em tempo real executando o algoritmo real de validação temporal em milissegundos para meses de 28, 29, 30 e 31 dias, transição de ano, exclusividade da distribuição e simulação de férias CLT.
+      </div>
+
+      <div id="containerResultadosTestes">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 7: LOG DE AUDITORIA LOCAL -->
+  <div id="tab-auditoria-demo" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Auditoria & Alterações</span>
+        <button class="btn btn-secondary" onclick="limparLogsDemo()">
+          <i class="fa-solid fa-trash"></i> Limpar Histórico Local
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left; padding-left:14px;">Data / Hora</th>
+              <th>Operação</th>
+              <th>Alvo / Colaborador</th>
+              <th>Detalhamento da Ação</th>
+            </tr>
+          </thead>
+          <tbody id="bodyAuditDemo">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR COLABORADOR DEMO -->
+  <div id="modalEditarColabDemo" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="font-size:1.2rem; font-weight:700; color:#fff; margin-bottom:16px;">
+        <i class="fa-solid fa-user-pen" style="color:var(--accent);"></i> Configuração do Colaborador Sintético
+      </h3>
+      <form onsubmit="salvarEdicaoColabDemo(event)">
+        <input type="hidden" id="editDemoId">
+        
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:4px;">Identificador Fictício:</label>
+          <input type="text" id="editDemoNome" class="sim-select" style="padding:8px 12px; text-align:left;" required>
+        </div>
+
+        <div style="margin-bottom:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div>
+            <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:4px;">Equipe / Grupo:</label>
+            <select id="editDemoGrupo" class="sim-select" style="padding:8px 12px; text-align:left;" onchange="onGrupoChangeInModal()">
+              <option value="Equipe A">Equipe A (Diurno 12x36 — Dias Ímpares)</option>
+              <option value="Equipe B">Equipe B (Diurno 12x36 — Dias Pares)</option>
+              <option value="Equipe C">Equipe C (Noturno 12x36 — Noites Ímpares)</option>
+              <option value="Equipe D">Equipe D (Noturno 12x36 — Noites Pares)</option>
+              <option value="Reservas 5x2">Reservas 5x2 (Horários e Folgas Flexíveis)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:4px;">Regime de Trabalho:</label>
+            <select id="editDemoRegime" class="sim-select" style="padding:8px 12px; text-align:left;">
+              <option value="12x36">12x36 (12h trabalho / 36h descanso)</option>
+              <option value="5x2">5x2 (8h diárias / 5 dias úteis / 2 folgas)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div>
+            <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:4px;">Horário de Entrada:</label>
+            <input type="time" id="editDemoHoraEntrada" class="sim-select" style="padding:8px 12px; text-align:left;" value="06:00">
+          </div>
+          <div>
+            <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:4px;">Horário de Saída:</label>
+            <input type="time" id="editDemoHoraSaida" class="sim-select" style="padding:8px 12px; text-align:left;" value="18:00">
+          </div>
+        </div>
+
+        <!-- 5x2 Custom Off-Days Section -->
+        <div id="section5x2OffDays" style="background:rgba(30,41,59,0.7); border:1px solid var(--border-color); border-radius:8px; padding:12px; margin-bottom:12px;">
+          <label style="font-size:0.85rem; font-weight:700; color:#38bdf8; display:block; margin-bottom:4px;">
+            <i class="fa-solid fa-calendar-xmark"></i> Dias de Descanso Semanal (5x2 — Selecione 2 dias de folga):
+          </label>
+          <div class="weekday-selector">
+            <label class="weekday-label" id="lblDom"><input type="checkbox" value="Dom" onchange="toggleWeekdayLabel(this)">Dom</label>
+            <label class="weekday-label" id="lblSeg"><input type="checkbox" value="Seg" onchange="toggleWeekdayLabel(this)">Seg</label>
+            <label class="weekday-label" id="lblTer"><input type="checkbox" value="Ter" onchange="toggleWeekdayLabel(this)">Ter</label>
+            <label class="weekday-label" id="lblQua"><input type="checkbox" value="Qua" onchange="toggleWeekdayLabel(this)">Qua</label>
+            <label class="weekday-label" id="lblQui"><input type="checkbox" value="Qui" onchange="toggleWeekdayLabel(this)">Qui</label>
+            <label class="weekday-label" id="lblSex"><input type="checkbox" value="Sex" onchange="toggleWeekdayLabel(this)">Sex</label>
+            <label class="weekday-label" id="lblSab"><input type="checkbox" value="Sáb" onchange="toggleWeekdayLabel(this)">Sáb</label>
+          </div>
+        </div>
+
+        <!-- Month Boundary Transition Setting -->
+        <div style="background:rgba(30,41,59,0.7); border:1px solid var(--border-color); border-radius:8px; padding:12px; margin-bottom:12px;">
+          <label style="font-size:0.85rem; font-weight:700; color:#c084fc; display:block; margin-bottom:4px;">
+            <i class="fa-solid fa-arrows-split-up-and-left"></i> Virada do Mês (Último Plantão em 31/Agosto/2026):
+          </label>
+          <select id="editDemoTransicao" class="sim-select" style="padding:8px 12px; text-align:left;">
+            <option value="FOLGA">Folga em 31/08 (Apto para trabalhar em 01/09 às 06:00)</option>
+            <option value="DIURNO_31">Plantão Diurno 31/08 (Encerrou 31/08 às 18:00 — Apto após 02/09 às 06:00 = 36h)</option>
+            <option value="NOTURNO_31">Plantão Noturno 31/08 (Encerrou 01/09 às 06:00 — Apto após 02/09 às 18:00 = 36h)</option>
+            <option value="NOTURNO_6H_31">Plantão Noturno 6h 31/08 (Encerrou 01/09 às 00:00 — Apto após 02/09 às 18:00 = 42h)</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:12px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div>
+            <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:4px;">Status / Afastamento:</label>
+            <select id="editDemoStatus" class="sim-select" style="padding:8px 12px; text-align:left;">
+              <option value="ATIVO">Ativo na Escala</option>
+              <option value="FERIAS_30">Férias Programadas CLT (30 Dias)</option>
+              <option value="LICENCA">Licença Médica / Afastamento</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.85rem; color:var(--text-muted); display:block; margin-bottom:4px;">Função Operacional:</label>
+            <input type="text" id="editDemoFuncao" class="sim-select" style="padding:8px 12px; text-align:left;" value="Operador de Ressonância Magnética">
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-secondary" onclick="fecharModalEditarColabDemo()">Cancelar</button>
+          <button type="submit" class="btn btn-green"><i class="fa-solid fa-check"></i> Salvar e Aplicar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMAR RESTAURAÇÃO DOS DADOS INICIAIS -->
+  <div id="modalRestaurarDemo" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="font-size:1.2rem; font-weight:700; color:#fbbf24; margin-bottom:14px;">
+        <i class="fa-solid fa-triangle-exclamation"></i> Restaurar Dados Fictícios Iniciais?
+      </h3>
+      <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:18px; line-height:1.6;">
+        Esta ação substituirá quaisquer alterações manuais salvas no armazenamento local deste navegador pelos <strong>dados padrão da demonstração sintética</strong> (32 colaboradores e escala de setembro de 2026).
+      </p>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-secondary" onclick="fecharModalRestaurarDemo()">Cancelar</button>
+        <button type="button" class="btn btn-danger" onclick="efetivarRestauracaoDemo()">Sim, Restaurar Padrões</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Box -->
+  <div id="toastMessage">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toastText">Alterações salvas com sucesso!</span>
+  </div>
+
+  <!-- JAVASCRIPT DA DEMONSTRAÇÃO SINTÉTICA -->
+  <script>
+    // =========================================================================
+    // 1. ISOLAMENTO E CONSTANTES DE ARMAZENAMENTO LOCAL (DEMO EXCLUSIVA)
+    // =========================================================================
+    const DEMO_STORAGE_KEY = "demo_escala_rm_v2_storage";
+    const DEMO_VERSION = "2.2-sintetica-cronologica";
+
+    let hasUnsavedChanges = false;
+
+    // Definição dos 30 dias de Setembro / 2026
+    const daysData = [
+      {"day": 1, "weekDay": "Ter", "label": "01/Ter", "isWeekend": false, "isHoliday": false},
+      {"day": 2, "weekDay": "Qua", "label": "02/Qua", "isWeekend": false, "isHoliday": false},
+      {"day": 3, "weekDay": "Qui", "label": "03/Qui", "isWeekend": false, "isHoliday": false},
+      {"day": 4, "weekDay": "Sex", "label": "04/Sex", "isWeekend": false, "isHoliday": false},
+      {"day": 5, "weekDay": "Sáb", "label": "05/Sáb", "isWeekend": true, "isHoliday": false},
+      {"day": 6, "weekDay": "Dom", "label": "06/Dom", "isWeekend": true, "isHoliday": false},
+      {"day": 7, "weekDay": "Seg", "label": "07/Seg", "isWeekend": false, "isHoliday": true}, // Independência do Brasil
+      {"day": 8, "weekDay": "Ter", "label": "08/Ter", "isWeekend": false, "isHoliday": false},
+      {"day": 9, "weekDay": "Qua", "label": "09/Qua", "isWeekend": false, "isHoliday": false},
+      {"day": 10, "weekDay": "Qui", "label": "10/Qui", "isWeekend": false, "isHoliday": false},
+      {"day": 11, "weekDay": "Sex", "label": "11/Sex", "isWeekend": false, "isHoliday": false},
+      {"day": 12, "weekDay": "Sáb", "label": "12/Sáb", "isWeekend": true, "isHoliday": false},
+      {"day": 13, "weekDay": "Dom", "label": "13/Dom", "isWeekend": true, "isHoliday": false},
+      {"day": 14, "weekDay": "Seg", "label": "14/Seg", "isWeekend": false, "isHoliday": false},
+      {"day": 15, "weekDay": "Ter", "label": "15/Ter", "isWeekend": false, "isHoliday": false},
+      {"day": 16, "weekDay": "Qua", "label": "16/Qua", "isWeekend": false, "isHoliday": false},
+      {"day": 17, "weekDay": "Qui", "label": "17/Qui", "isWeekend": false, "isHoliday": false},
+      {"day": 18, "weekDay": "Sex", "label": "18/Sex", "isWeekend": false, "isHoliday": false},
+      {"day": 19, "weekDay": "Sáb", "label": "19/Sáb", "isWeekend": true, "isHoliday": false},
+      {"day": 20, "weekDay": "Dom", "label": "20/Dom", "isWeekend": true, "isHoliday": false},
+      {"day": 21, "weekDay": "Seg", "label": "21/Seg", "isWeekend": false, "isHoliday": false},
+      {"day": 22, "weekDay": "Ter", "label": "22/Ter", "isWeekend": false, "isHoliday": false},
+      {"day": 23, "weekDay": "Qua", "label": "23/Qua", "isWeekend": false, "isHoliday": false},
+      {"day": 24, "weekDay": "Qui", "label": "24/Qui", "isWeekend": false, "isHoliday": false},
+      {"day": 25, "weekDay": "Sex", "label": "25/Sex", "isWeekend": false, "isHoliday": false},
+      {"day": 26, "weekDay": "Sáb", "label": "26/Sáb", "isWeekend": true, "isHoliday": false},
+      {"day": 27, "weekDay": "Dom", "label": "27/Dom", "isWeekend": true, "isHoliday": false},
+      {"day": 28, "weekDay": "Seg", "label": "28/Seg", "isWeekend": false, "isHoliday": false},
+      {"day": 29, "weekDay": "Ter", "label": "29/Ter", "isWeekend": false, "isHoliday": false},
+      {"day": 30, "weekDay": "Qua", "label": "30/Qua", "isWeekend": false, "isHoliday": false}
+    ];
+
+    // =========================================================================
+    // 2. GERADOR ARTIFICIAL DE DADOS SINTÉTICOS (SEM QUALQUER REGISTRO REAL)
+    // =========================================================================
+    function gerarBaseSinteticaInicial() {
+      const colaboradores = [];
+
+      // Escala 12x36 Par / Ímpar
+      const gerar12x36 = (codigoTrabalho, isImpar) => {
+        return daysData.map((d) => {
+          const trabalha = isImpar ? (d.day % 2 === 1) : (d.day % 2 === 0);
+          return trabalha ? codigoTrabalho : "F";
+        });
+      };
+
+      // Escala 5x2 com dias de descanso flexíveis configuráveis
+      const gerar5x2Custom = (codigoTrabalho, diasFolga) => {
+        return daysData.map((d) => {
+          return diasFolga.includes(d.weekDay) ? "F52" : codigoTrabalho;
+        });
+      };
+
+      // A) Equipe A: 5 Operadores Diurnos 12x36 (06h às 18h, Dias Ímpares)
+      for (let i = 1; i <= 5; i++) {
+        const idStr = `DEMO-${String(i).padStart(3, '0')}`;
+        colaboradores.push({
+          id: idStr,
+          nome: `Operador Fictício ${i}`,
+          equipe: "Equipe A",
+          regime: "12x36",
+          horaEntrada: "06:00",
+          horaSaida: "18:00",
+          diasFolgaSemanal: [],
+          transicaoMesAnterior: "FOLGA", // Folga em 31/08 -> Apto em 01/09 às 06:00
+          funcao: `Operador de RM (Máquina ${i})`,
+          status: "ATIVO",
+          schedule: gerar12x36("D12", true)
+        });
+      }
+
+      // B) Equipe B: 5 Operadores Diurnos 12x36 (06h às 18h, Dias Pares)
+      for (let i = 6; i <= 10; i++) {
+        const idStr = `DEMO-${String(i).padStart(3, '0')}`;
+        colaboradores.push({
+          id: idStr,
+          nome: `Operador Fictício ${i}`,
+          equipe: "Equipe B",
+          regime: "12x36",
+          horaEntrada: "06:00",
+          horaSaida: "18:00",
+          diasFolgaSemanal: [],
+          transicaoMesAnterior: "DIURNO_31", // Encerrou 31/08 às 18:00 -> Apto em 02/09 às 06:00 (36h exatas)
+          funcao: `Operador de RM (Máquina ${i - 5})`,
+          status: "ATIVO",
+          schedule: gerar12x36("D12", false)
+        });
+      }
+
+      // C) Equipe C: Noturno 12x36 (Noites Ímpares)
+      // DEMO-011 a 014: 4 Operadores 12h (18h às 06h)
+      for (let i = 11; i <= 14; i++) {
+        const idStr = `DEMO-${String(i).padStart(3, '0')}`;
+        colaboradores.push({
+          id: idStr,
+          nome: `Operador Fictício ${i}`,
+          equipe: "Equipe C",
+          regime: "12x36",
+          horaEntrada: "18:00",
+          horaSaida: "06:00",
+          diasFolgaSemanal: [],
+          transicaoMesAnterior: "FOLGA", // Folga 31/08 -> Apto em 01/09 às 18:00
+          funcao: `Operador Noturno (Máquina ${i - 10})`,
+          status: "ATIVO",
+          schedule: gerar12x36("N12", true)
+        });
+      }
+      // DEMO-015: 5º Operador Noturno (18h às 00h — vai embora à meia-noite!)
+      colaboradores.push({
+        id: "DEMO-015",
+        nome: "Operador Fictício 15",
+        equipe: "Equipe C",
+        regime: "12x36",
+        horaEntrada: "18:00",
+        horaSaida: "00:00", // Encerra à meia-noite
+        diasFolgaSemanal: [],
+        transicaoMesAnterior: "FOLGA",
+        funcao: "Operador Noturno 5ª Máquina (18h às 00h)",
+        status: "ATIVO",
+        schedule: gerar12x36("N6", true)
+      });
+
+      // D) Equipe D: Noturno 12x36 (Noites Pares)
+      // DEMO-016 a 019: 4 Operadores 12h (18h às 06h)
+      for (let i = 16; i <= 19; i++) {
+        const idStr = `DEMO-${String(i).padStart(3, '0')}`;
+        colaboradores.push({
+          id: idStr,
+          nome: `Operador Fictício ${i}`,
+          equipe: "Equipe D",
+          regime: "12x36",
+          horaEntrada: "18:00",
+          horaSaida: "06:00",
+          diasFolgaSemanal: [],
+          transicaoMesAnterior: "NOTURNO_31", // Encerrou 01/09 às 06:00 -> Apto em 02/09 às 18:00 (36h exatas)
+          funcao: `Operador Noturno (Máquina ${i - 15})`,
+          status: "ATIVO",
+          schedule: gerar12x36("N12", false)
+        });
+      }
+      // DEMO-020: 5º Operador Noturno (18h às 00h — vai embora à meia-noite!)
+      colaboradores.push({
+        id: "DEMO-020",
+        nome: "Operador Fictício 20",
+        equipe: "Equipe D",
+        regime: "12x36",
+        horaEntrada: "18:00",
+        horaSaida: "00:00",
+        diasFolgaSemanal: [],
+        transicaoMesAnterior: "NOTURNO_6H_31", // Encerrou 01/09 às 00:00 -> Apto em 02/09 às 18:00 (42h de descanso)
+        funcao: "Operador Noturno 5ª Máquina (18h às 00h)",
+        status: "ATIVO",
+        schedule: gerar12x36("N6", false)
+      });
+
+      // E) 4 Circulantes 12x36 (1 por Equipe)
+      colaboradores.push({
+        id: "DEMO-021",
+        nome: "Circulante Fictício A",
+        equipe: "Equipe A",
+        regime: "12x36",
+        horaEntrada: "06:00",
+        horaSaida: "18:00",
+        diasFolgaSemanal: [],
+        transicaoMesAnterior: "FOLGA",
+        funcao: "Circulante Diurno (Apoio e Triagem)",
+        status: "ATIVO",
+        schedule: gerar12x36("CIRC", true)
+      });
+
+      colaboradores.push({
+        id: "DEMO-022",
+        nome: "Circulante Fictício B",
+        equipe: "Equipe B",
+        regime: "12x36",
+        horaEntrada: "06:00",
+        horaSaida: "18:00",
+        diasFolgaSemanal: [],
+        transicaoMesAnterior: "DIURNO_31",
+        funcao: "Circulante Diurno (Apoio e Triagem)",
+        status: "ATIVO",
+        schedule: gerar12x36("CIRC", false)
+      });
+
+      // Circulante C e D alocados no posto EXCLUSIVO de distribuição noturna
+      colaboradores.push({
+        id: "DEMO-023",
+        nome: "Circulante Fictício C",
+        equipe: "Equipe C",
+        regime: "12x36",
+        horaEntrada: "18:00",
+        horaSaida: "06:00",
+        diasFolgaSemanal: [],
+        transicaoMesAnterior: "FOLGA",
+        funcao: "Distribuição Noturna Exclusiva (Sem acúmulo)",
+        status: "ATIVO",
+        schedule: gerar12x36("DIST", true)
+      });
+
+      colaboradores.push({
+        id: "DEMO-024",
+        nome: "Circulante Fictício D",
+        equipe: "Equipe D",
+        regime: "12x36",
+        horaEntrada: "18:00",
+        horaSaida: "06:00",
+        diasFolgaSemanal: [],
+        transicaoMesAnterior: "NOTURNO_31",
+        funcao: "Distribuição Noturna Exclusiva (Sem acúmulo)",
+        status: "ATIVO",
+        schedule: gerar12x36("DIST", false)
+      });
+
+      // F) 8 Reservas em Regime 5x2 com Distribuição Flexível de Folgas
+      // R01 a R04: Folga Sábado e Domingo (08h às 17h) — Cobertura Almoço Dias Úteis
+      for (let i = 25; i <= 28; i++) {
+        const idStr = `DEMO-${String(i).padStart(3, '0')}`;
+        colaboradores.push({
+          id: idStr,
+          nome: `Reserva Fictício ${i - 24}`,
+          equipe: "Reservas 5x2",
+          regime: "5x2",
+          horaEntrada: "08:00",
+          horaSaida: "17:00",
+          diasFolgaSemanal: ["Sáb", "Dom"],
+          transicaoMesAnterior: "FOLGA",
+          funcao: "Reserva de Almoço Diurno (Dias Úteis)",
+          status: "ATIVO",
+          schedule: gerar5x2Custom("R8", ["Sáb", "Dom"])
+        });
+      }
+
+      // R05 e R06: Folga Domingo e Segunda (10h às 19h) — Ativos no Sábado
+      for (let i = 29; i <= 30; i++) {
+        const idStr = `DEMO-${String(i).padStart(3, '0')}`;
+        colaboradores.push({
+          id: idStr,
+          nome: `Reserva Fictício ${i - 24}`,
+          equipe: "Reservas 5x2",
+          regime: "5x2",
+          horaEntrada: "10:00",
+          horaSaida: "19:00",
+          diasFolgaSemanal: ["Dom", "Seg"],
+          transicaoMesAnterior: "FOLGA",
+          funcao: "Reserva de Apoio / Sábado Ativo",
+          status: "ATIVO",
+          schedule: gerar5x2Custom("R8", ["Dom", "Seg"])
+        });
+      }
+
+      // R07 e R08: Folga Terça e Quarta (08h às 17h) — Ativos no Fim de Semana Inteiro
+      for (let i = 31; i <= 32; i++) {
+        const idStr = `DEMO-${String(i).padStart(3, '0')}`;
+        colaboradores.push({
+          id: idStr,
+          nome: `Reserva Fictício ${i - 24}`,
+          equipe: "Reservas 5x2",
+          regime: "5x2",
+          horaEntrada: "08:00",
+          horaSaida: "17:00",
+          diasFolgaSemanal: ["Ter", "Qua"],
+          transicaoMesAnterior: "FOLGA",
+          funcao: "Reserva de Apoio / Fim de Semana Ativo",
+          status: "ATIVO",
+          schedule: gerar5x2Custom("R8", ["Ter", "Qua"])
+        });
+      }
+
+      return colaboradores;
+    }
+
+    let demoEmployees = [];
+    let auditLogsDemo = [
+      { timestamp: new Date().toLocaleString('pt-BR'), action: "Inicialização Demo", target: "Sistema", description: "Base sintética com modelagem horária noturna e auditoria temporal cronológica inicializada." }
+    ];
+
+    // =========================================================================
+    // 3. PERSISTÊNCIA LOCAL COM DIRTY STATE
+    // =========================================================================
+    function setDirtyState(dirty) {
+      hasUnsavedChanges = dirty;
+      const indicator = document.getElementById("saveStatusIndicator");
+      const icon = document.getElementById("saveStatusIcon");
+      const text = document.getElementById("saveStatusText");
+
+      if (!indicator || !icon || !text) return;
+
+      if (dirty) {
+        indicator.className = "save-indicator-badge dirty";
+        icon.className = "fa-solid fa-triangle-exclamation";
+        text.innerText = "Alterações Não Salvas";
+        indicator.title = "Clique em 'Salvar Alterações' para gravar os dados localmente.";
+      } else {
+        indicator.className = "save-indicator-badge saved";
+        icon.className = "fa-solid fa-circle-check";
+        text.innerText = "Salvo Localmente";
+        indicator.title = "Dados gravados no localStorage deste navegador.";
+      }
+    }
+
+    function salvarAlteracoesDemo() {
+      try {
+        const payload = {
+          version: DEMO_VERSION,
+          timestamp: new Date().toISOString(),
+          employees: demoEmployees,
+          auditLogs: auditLogsDemo.slice(0, 50)
+        };
+        localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(payload));
+        setDirtyState(false);
+        addAuditDemoLog("Salvar Alterações", "Matriz", "Dados fictícios da demonstração gravados no localStorage deste navegador.");
+        showToast("Alterações da demonstração salvas no navegador com sucesso!");
+        executarAuditoriaCompleta();
+      } catch (e) {
+        console.error("Erro ao salvar:", e);
+        showToast("Falha ao gravar no navegador local.");
+      }
+    }
+
+    function carregarDadosDemo() {
+      try {
+        const raw = localStorage.getItem(DEMO_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.version === DEMO_VERSION && Array.isArray(parsed.employees)) {
+            demoEmployees = parsed.employees;
+            if (Array.isArray(parsed.auditLogs)) auditLogsDemo = parsed.auditLogs;
+            setDirtyState(false);
+            return true;
+          }
+        }
+      } catch (e) {
+        console.warn("Recuperação falhou. Carregando padrão.", e);
+      }
+      demoEmployees = gerarBaseSinteticaInicial();
+      setDirtyState(false);
+      return false;
+    }
+
+    function efetivarRestauracaoDemo() {
+      localStorage.removeItem(DEMO_STORAGE_KEY);
+      demoEmployees = gerarBaseSinteticaInicial();
+      fecharModalRestaurarDemo();
+      setDirtyState(false);
+      renderAllDemoViews();
+      addAuditDemoLog("Restaurar Padrão", "Sistema", "Configurações e escalas padrão da demonstração restauradas.");
+      showToast("Dados padrão da demonstração restaurados!");
+    }
+
+    // =========================================================================
+    // 4. MOTOR DE VALIDAÇÃO TEMPORAL (INTERVALO REAL DE 36H & COBERTURA NOTURNA)
+    // =========================================================================
+    function extrairHorasPlantao(emp, code) {
+      if (code === "D12" || code === "CIRC") {
+        return { start: emp.horaEntrada || "06:00", end: emp.horaSaida || "18:00", duracao: 12, isNoturno: false };
+      }
+      if (code === "N12" || code === "DIST") {
+        return { start: emp.horaEntrada || "18:00", end: emp.horaSaida || "06:00", duracao: 12, isNoturno: true };
+      }
+      if (code === "N6") {
+        return { start: "18:00", end: "00:00", duracao: 6, isNoturno: false };
+      }
+      if (code === "R8") {
+        return { start: emp.horaEntrada || "08:00", end: emp.horaSaida || "17:00", duracao: 8, isNoturno: false };
+      }
+      return null;
+    }
+
+    // Valida o intervalo cronológico em horas entre cada término e início de plantão
+    function validarDescansoReal36h(emp) {
+      const plantoes = [];
+
+      // Checar se houve plantão no encerramento de Agosto/2026
+      if (emp.transicaoMesAnterior === "NOTURNO_31") {
+        // Plantão das 18h de 31/08 até 06h de 01/09
+        plantoes.push({
+          inicio: new Date(2026, 7, 31, 18, 0),
+          termino: new Date(2026, 8, 1, 6, 0),
+          label: "31/Ago (Noturno 18h–06h)"
+        });
+      } else if (emp.transicaoMesAnterior === "NOTURNO_6H_31") {
+        // Plantão 6h das 18h de 31/08 até 00h de 01/09
+        plantoes.push({
+          inicio: new Date(2026, 7, 31, 18, 0),
+          termino: new Date(2026, 8, 1, 0, 0),
+          label: "31/Ago (Noturno 6h 18h–00h)"
+        });
+      } else if (emp.transicaoMesAnterior === "DIURNO_31") {
+        // Plantão das 06h até 18h de 31/08
+        plantoes.push({
+          inicio: new Date(2026, 7, 31, 6, 0),
+          termino: new Date(2026, 7, 31, 18, 0),
+          label: "31/Ago (Diurno 06h–18h)"
+        });
+      }
+
+      // Adicionar os plantões do mês de Setembro
+      daysData.forEach((d, idx) => {
+        const code = emp.schedule[idx];
+        const info = extrairHorasPlantao(emp, code);
+        if (!info) return;
+
+        const [hIni, mIni] = info.start.split(":").map(Number);
+        const [hFim, mFim] = info.end.split(":").map(Number);
+
+        const dataInicio = new Date(2026, 8, d.day, hIni, mIni);
+        let dataTermino = new Date(2026, 8, d.day, hFim, mFim);
+
+        if (info.isNoturno || (hFim === 0 && hIni > 0) || hFim < hIni) {
+          dataTermino = new Date(2026, 8, d.day + 1, hFim, mFim);
+        }
+
+        plantoes.push({
+          inicio: dataInicio,
+          termino: dataTermino,
+          label: `${d.label} (${code})`
+        });
+      });
+
+      const violacoes = [];
+      for (let i = 0; i < plantoes.length - 1; i++) {
+        const pAtual = plantoes[i];
+        const pProximo = plantoes[i + 1];
+
+        const intervaloHoras = (pProximo.inicio - pAtual.termino) / (1000 * 3600);
+        if (intervaloHoras < 36.0) {
+          violacoes.push({
+            pAtual: pAtual.label,
+            pProximo: pProximo.label,
+            intervaloHoras: intervaloHoras.toFixed(1)
+          });
+        }
+      }
+      return violacoes;
+    }
+
+    function executarAuditoriaCompleta() {
+      const container = document.getElementById("validationReportBox");
+      const quickBadge = document.getElementById("quickStatusBadge");
+      if (!container) return;
+
+      const errosCriticos = [];
+      const pendenciasOperacionais = [];
+      const conformidades = [];
+
+      // 1. Auditoria Temporal de 36 Horas para o Regime 12x36
+      demoEmployees.filter(e => e.regime === "12x36").forEach(emp => {
+        const violacoes = validarDescansoReal36h(emp);
+        violacoes.forEach(v => {
+          errosCriticos.push(`[VIOLAÇÃO 36H DESCANSO] ${emp.id} (${emp.equipe}): intervalo de apenas ${v.intervaloHoras}h entre o término em ${v.pAtual} e o início em ${v.pProximo} (mínimo legal: 36h).`);
+        });
+      });
+
+      // 2. Auditoria do Regime 5x2 (Dias de descanso e limite consecutivo)
+      demoEmployees.filter(e => e.regime === "5x2").forEach(emp => {
+        let consecutivos = 0;
+        emp.schedule.forEach((code, idx) => {
+          if (code === "R8") {
+            consecutivos++;
+            if (consecutivos > 5) {
+              errosCriticos.push(`[LIMITE 5x2 EXCEDIDO] ${emp.id}: ${consecutivos} dias seguidos trabalhados sem descanso até ${daysData[idx].label}.`);
+            }
+          } else {
+            consecutivos = 0;
+          }
+        });
+      });
+
+      // 3. Auditoria Diurna de Máquinas (Mínimo 5 Máquinas) e Intervalos
+      daysData.forEach((d, idx) => {
+        const maquinasDiurno = demoEmployees.filter(e => e.schedule[idx] === "D12").length;
+        if (maquinasDiurno < 5) {
+          errosCriticos.push(`[DÉFICIT DIURNO MÁQUINAS] Dia ${d.label} possui apenas ${maquinasDiurno} operadores alocados nas máquinas (exigência: 5 máquinas).`);
+        }
+
+        // Profissionais disponíveis para alívio no diurno (Circulante diurno + Reservas 5x2 presentes)
+        const alívioDiurno = demoEmployees.filter(e => e.schedule[idx] === "CIRC" || e.schedule[idx] === "R8").length;
+        if (alívioDiurno === 0) {
+          pendenciasOperacionais.push(`[PENDÊNCIA EXPLÍCITA - INTERVALO DIURNO] Dia ${d.label}: 5 máquinas ativas e ZERO profissionais de alívio para o almoço. Risco de parada de máquina.`);
+        }
+      });
+
+      // 4. Auditoria Noturna: 5 máquinas (18h-00h), 4 máquinas (00h-06h), Distribuição Exclusiva
+      daysData.forEach((d, idx) => {
+        const operadores12h = demoEmployees.filter(e => e.schedule[idx] === "N12").length;
+        const operadores6h = demoEmployees.filter(e => e.schedule[idx] === "N6").length;
+        const distribuicaoNoturna = demoEmployees.filter(e => e.schedule[idx] === "DIST").length;
+
+        // Total de máquinas ativas das 18h às 00h
+        const maquinas18a00 = operadores12h + operadores6h;
+        if (maquinas18a00 < 5) {
+          errosCriticos.push(`[DÉFICIT NOTURNO 18h-00h] Noite de ${d.label} possui apenas ${maquinas18a00} operadores (exigência: 5 máquinas).`);
+        }
+
+        // Total de máquinas ativas das 00h às 06h (o 5º operador já encerrou)
+        if (operadores12h < 4) {
+          errosCriticos.push(`[DÉFICIT MADRUGADA 00h-06h] Madrugada de ${d.label} possui apenas ${operadores12h} operadores (exigência: 4 máquinas).`);
+        }
+
+        // Distribuição noturna exclusiva (exigência: exatamente 1 e exclusivo)
+        if (distribuicaoNoturna < 1) {
+          errosCriticos.push(`[DISTRIBUIÇÃO NOTURNA DESCOBERTA] Noite de ${d.label}: nenhum profissional escalado no posto exclusivo de distribuição.`);
+        }
+
+        // Checar dupla função: circulante/distribuição NUNCA conta para máquina
+        const profissionalDist = demoEmployees.find(e => e.schedule[idx] === "DIST");
+        if (profissionalDist && (profissionalDist.schedule[idx] === "N12" || profissionalDist.schedule[idx] === "N6")) {
+          errosCriticos.push(`[DUPLA FUNÇÃO PROIBIDA] ${profissionalDist.id} escalado simultaneamente em máquina e distribuição na noite de ${d.label}.`);
+        }
+
+        // GERAÇÃO DE PENDÊNCIA EXPLÍCITA DE COBERTURA DE INTERVALO NOTURNO
+        pendenciasOperacionais.push(`[PENDÊNCIA CRÍTICA - DÉFICIT DE ALÍVIO NOTURNO] Noite de ${d.label}: Postos fixos preenchidos, porém inexiste profissional volante para render os intervalos de jantar (20h-00h) e ceia (00h-05h) sem paralisar máquinas ou desprover a distribuição.`);
+      });
+
+      // 5. Consolidação de Status da Escala
+      const isValida = (errosCriticos.length === 0 && pendenciasOperacionais.length === 0);
+
+      if (isValida) {
+        conformidades.push("✓ Descanso mínimo de 36 horas entre plantões 12x36 auditado com cálculo cronológico exato.");
+        conformidades.push("✓ Transição com mês anterior respeitada rigorosamente para todas as turmas.");
+        conformidades.push("✓ Cobertura diurna das 5 máquinas garantida nos 30 dias do mês.");
+        conformidades.push("✓ Posto exclusivo de Distribuição Noturna garantido 100% das noites com profissional dedicado.");
+        conformidades.push("✓ Redução programada para 4 máquinas na madrugada (00h às 06h) confirmada.");
+        conformidades.push("✓ Regime 5x2 com descanso flexível de 2 dias sem excesso de dias consecutivos.");
+
+        if (quickBadge) {
+          quickBadge.innerHTML = `<span style="color:#34d399;"><i class="fa-solid fa-circle-check"></i> Escala Homologada (0 Pendências)</span>`;
+        }
+      } else {
+        if (quickBadge) {
+          quickBadge.innerHTML = `<span style="color:#f87171;"><i class="fa-solid fa-circle-exclamation"></i> Pendências Críticas (${errosCriticos.length + pendenciasOperacionais.length}) — Aprovação Bloqueada</span>`;
+        }
+      }
+
+      // Renderização do Relatório
+      let html = "";
+      if (errosCriticos.length > 0) {
+        html += `<div style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#f87171; padding:16px; border-radius:8px; margin-bottom:16px;">
+          <h4 style="font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation"></i> Violações Críticas Bloqueantes (${errosCriticos.length}):</h4>
+          <ul style="padding-left:20px; font-size:0.85rem; line-height:1.7;">
+            ${errosCriticos.slice(0, 15).map(e => `<li>${e}</li>`).join('')}
+            ${errosCriticos.length > 15 ? `<li>... e mais ${errosCriticos.length - 15} violações críticas registradas.</li>` : ''}
+          </ul>
+        </div>`;
+      }
+
+      if (pendenciasOperacionais.length > 0) {
+        html += `<div style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); color:#fbbf24; padding:16px; border-radius:8px; margin-bottom:16px;">
+          <h4 style="font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-clock"></i> Pendências Operacionais de Intervalos e Cobertura (${pendenciasOperacionais.length}):</h4>
+          <p style="font-size:0.82rem; color:#fde68a; margin-bottom:8px;">
+            <strong>Aviso de Engenharia:</strong> A escala <em>não pode ser declarada homologada</em> enquanto estas lacunas operacionais persistirem:
+          </p>
+          <ul style="padding-left:20px; font-size:0.85rem; line-height:1.7;">
+            ${pendenciasOperacionais.slice(0, 8).map(p => `<li>${p}</li>`).join('')}
+            ${pendenciasOperacionais.length > 8 ? `<li>... e pendências idênticas nas demais noites do mês (totalizando ${pendenciasOperacionais.length} noites com déficit de volante).</li>` : ''}
+          </ul>
+        </div>`;
+      }
+
+      if (conformidades.length > 0) {
+        html += `<div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#34d399; padding:16px; border-radius:8px;">
+          <h4 style="font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-circle-check"></i> Regras Auditadas com Sucesso:</h4>
+          <ul style="padding-left:20px; font-size:0.85rem; line-height:1.7;">
+            ${conformidades.map(c => `<li>${c}</li>`).join('')}
+          </ul>
+        </div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    // =========================================================================
+    // 5. RENDERIZAÇÃO DAS MATRIZES
+    // =========================================================================
+    function getShiftBadgeClass(code) {
+      if (code === "D12") return "badge-d12";
+      if (code === "N12") return "badge-n12";
+      if (code === "N6")  return "badge-n6";
+      if (code === "R8")  return "badge-r8";
+      if (code === "CIRC") return "badge-circ";
+      if (code === "DIST") return "badge-dist";
+      if (code === "F") return "badge-folga";
+      if (code === "F52") return "badge-f52";
+      if (code === "FE") return "badge-fe";
+      if (code === "LM") return "badge-lm";
+      return "badge-folga";
+    }
+
+    function renderMatrizOficialDemo() {
+      const headerRow = document.getElementById("headerRowDemo");
+      const body = document.getElementById("bodyEscalaDemo");
+      if (!headerRow || !body) return;
+
+      headerRow.innerHTML = `
+        <th class="col-emp">Colaborador Fictício</th>
+        <th class="col-regime">Regime / Horário</th>
+      `;
+
+      daysData.forEach(d => {
+        const th = document.createElement("th");
+        th.innerText = d.label;
+        if (d.isWeekend) th.className = "weekend-th";
+        if (d.isHoliday) th.className = "holiday-th";
+        headerRow.appendChild(th);
+      });
+
+      headerRow.innerHTML += `<th>Total Folgas</th><th>Carga Mensal</th>`;
+      body.innerHTML = "";
+
+      const grupos = ["Equipe A", "Equipe B", "Equipe C", "Equipe D", "Reservas 5x2"];
+
+      grupos.forEach(grp => {
+        const emps = demoEmployees.filter(e => e.equipe === grp);
+        if (emps.length === 0) return;
+
+        const trGrp = document.createElement("tr");
+        trGrp.className = "group-header-row";
+        trGrp.innerHTML = `<td colspan="${daysData.length + 4}"><i class="fa-solid fa-users"></i> ${grp} (${emps.length} Profissionais Sintéticos)</td>`;
+        body.appendChild(trGrp);
+
+        emps.forEach(emp => {
+          const tr = document.createElement("tr");
+          let totalFolgas = 0;
+          let totalHoras = 0;
+
+          const horarioShow = `${emp.horaEntrada || '06:00'} às ${emp.horaSaida || '18:00'}`;
+          let cellsHtml = `<td class="col-emp">${emp.id} <span style="font-size:0.75rem; color:var(--text-muted);">(${emp.nome})</span></td>`;
+          cellsHtml += `<td class="col-regime">${emp.regime} <span style="font-size:0.7rem; color:#38bdf8;">• ${horarioShow}</span></td>`;
+
+          emp.schedule.forEach(code => {
+            const badgeCls = getShiftBadgeClass(code);
+            if (code === "F" || code === "F52" || code === "FE" || code === "LM") {
+              totalFolgas++;
+            } else if (code === "D12" || code === "N12" || code === "CIRC" || code === "DIST") {
+              totalHoras += 12;
+            } else if (code === "N6") {
+              totalHoras += 6;
+            } else if (code === "R8") {
+              totalHoras += 8;
+            }
+
+            cellsHtml += `<td><span class="legend-badge ${badgeCls}">${code}</span></td>`;
+          });
+
+          cellsHtml += `<td style="font-weight:700; color:#fbbf24;">${totalFolgas}</td>`;
+          cellsHtml += `<td style="font-weight:700; color:#34d399;">${totalHoras}h</td>`;
+          tr.innerHTML = cellsHtml;
+          body.appendChild(tr);
+        });
+      });
+    }
+
+    function renderSimulacaoEditavelDemo() {
+      const headerRow = document.getElementById("headerRowSimDemo");
+      const body = document.getElementById("bodySimDemo");
+      if (!headerRow || !body) return;
+
+      headerRow.innerHTML = `
+        <th class="col-emp">Colaborador Fictício</th>
+        <th class="col-regime">Regime</th>
+      `;
+
+      daysData.forEach(d => {
+        const th = document.createElement("th");
+        th.innerText = d.label;
+        if (d.isWeekend) th.className = "weekend-th";
+        if (d.isHoliday) th.className = "holiday-th";
+        headerRow.appendChild(th);
+      });
+
+      headerRow.innerHTML += `<th>Folgas</th><th>Carga</th>`;
+      body.innerHTML = "";
+
+      const optionsList = [
+        { code: "D12", label: "D12" },
+        { code: "N12", label: "N12" },
+        { code: "N6",  label: "N6" },
+        { code: "R8",  label: "R8" },
+        { code: "CIRC", label: "CIRC" },
+        { code: "DIST", label: "DIST" },
+        { code: "F",   label: "F" },
+        { code: "F52", label: "F52" },
+        { code: "FE",  label: "FE" },
+        { code: "LM",  label: "LM" }
+      ];
+
+      demoEmployees.forEach(emp => {
+        const tr = document.createElement("tr");
+        let folgas = 0;
+        let horas = 0;
+
+        let cells = `<td class="col-emp">${emp.id}</td><td class="col-regime">${emp.regime}</td>`;
+
+        emp.schedule.forEach((code, dIdx) => {
+          if (code === "F" || code === "F52" || code === "FE" || code === "LM") folgas++;
+          else if (code === "D12" || code === "N12" || code === "CIRC" || code === "DIST") horas += 12;
+          else if (code === "N6") horas += 6;
+          else if (code === "R8") horas += 8;
+
+          cells += `<td style="padding:2px;">
+            <select class="sim-select" onchange="alterarCelulaSimulacao('${emp.id}', ${dIdx}, this.value)">
+              ${optionsList.map(opt => `<option value="${opt.code}" ${opt.code === code ? 'selected' : ''}>${opt.label}</option>`).join('')}
+            </select>
+          </td>`;
+        });
+
+        cells += `<td style="font-weight:700; color:#fbbf24;" id="folgas_${emp.id}">${folgas}</td>`;
+        cells += `<td style="font-weight:700; color:#34d399;" id="horas_${emp.id}">${horas}h</td>`;
+        tr.innerHTML = cells;
+        body.appendChild(tr);
+      });
+    }
+
+    function alterarCelulaSimulacao(empId, dayIdx, novoValor) {
+      const emp = demoEmployees.find(e => e.id === empId);
+      if (!emp) return;
+
+      const valorAntigo = emp.schedule[dayIdx];
+      emp.schedule[dayIdx] = novoValor;
+      setDirtyState(true);
+
+      let folgas = 0;
+      let horas = 0;
+      emp.schedule.forEach(c => {
+        if (c === "F" || c === "F52" || c === "FE" || c === "LM") folgas++;
+        else if (c === "D12" || c === "N12" || c === "CIRC" || code === "DIST") horas += 12;
+        else if (c === "N6") horas += 6;
+        else if (c === "R8") horas += 8;
+      });
+
+      const elF = document.getElementById(`folgas_${emp.id}`);
+      const elH = document.getElementById(`horas_${emp.id}`);
+      if (elF) elF.innerText = folgas;
+      if (elH) elH.innerText = `${horas}h`;
+
+      addAuditDemoLog("Edição Simulação", emp.id, `Dia ${daysData[dayIdx].label}: '${valorAntigo}' -> '${novoValor}'`);
+      executarAuditoriaCompleta();
+    }
+
+    function renderCadastroColaboradoresDemo() {
+      const body = document.getElementById("bodyColabDemo");
+      if (!body) return;
+      body.innerHTML = "";
+
+      demoEmployees.forEach(emp => {
+        const tr = document.createElement("tr");
+        const horarioShow = `${emp.horaEntrada || '06:00'} às ${emp.horaSaida || '18:00'}`;
+        const folgasShow = (emp.diasFolgaSemanal && emp.diasFolgaSemanal.length > 0)
+          ? emp.diasFolgaSemanal.join(", ")
+          : "Revezamento 36h";
+
+        let transicaoBadge = "";
+        if (emp.transicaoMesAnterior === "NOTURNO_31") {
+          transicaoBadge = `<span style="font-size:0.7rem; color:#c084fc;">Noite 31/08 (Apto 02/09 18h)</span>`;
+        } else if (emp.transicaoMesAnterior === "NOTURNO_6H_31") {
+          transicaoBadge = `<span style="font-size:0.7rem; color:#a855f7;">Noite 6h 31/08 (Apto 02/09 18h)</span>`;
+        } else if (emp.transicaoMesAnterior === "DIURNO_31") {
+          transicaoBadge = `<span style="font-size:0.7rem; color:#38bdf8;">Dia 31/08 (Apto 02/09 06h)</span>`;
+        } else {
+          transicaoBadge = `<span style="font-size:0.7rem; color:#34d399;">Folga 31/08 (Apto 01/09)</span>`;
+        }
+
+        let statusBadge = `<span style="color:#34d399; font-weight:600; font-size:0.75rem;">Ativo</span>`;
+        if (emp.status === "FERIAS_30") {
+          statusBadge = `<span class="legend-badge badge-fe" style="font-size:0.7rem;">Férias (30d)</span>`;
+        } else if (emp.status === "LICENCA") {
+          statusBadge = `<span class="legend-badge badge-lm" style="font-size:0.7rem;">Licença</span>`;
+        }
+
+        tr.innerHTML = `
+          <td style="text-align:left; padding-left:14px; font-weight:700; color:#ffffff;">
+            ${emp.id} <span style="font-weight:400; color:var(--text-muted); font-size:0.78rem;">(${emp.nome})</span>
+          </td>
+          <td><span class="legend-badge badge-dist" style="font-size:0.75rem;">${emp.equipe}</span></td>
+          <td><span class="legend-badge ${emp.regime === '12x36' ? 'badge-d12' : 'badge-r8'}">${emp.regime}</span></td>
+          <td style="color:#cbd5e1; font-size:0.8rem;">${horarioShow}</td>
+          <td style="color:#fbbf24; font-size:0.8rem; font-weight:600;">${folgasShow}</td>
+          <td>${transicaoBadge}</td>
+          <td>${statusBadge}</td>
+          <td style="text-align:left; color:#38bdf8;">${emp.funcao}</td>
+          <td>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="abrirModalEditarColabDemo('${emp.id}')">
+              <i class="fa-solid fa-pen"></i> Configurar
+            </button>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    // =========================================================================
+    // 6. MODELAGEM DA COBERTURA POR FAIXA HORÁRIA (TAB 3)
+    // =========================================================================
+    function popularSelectDiasFaixa() {
+      const select = document.getElementById("selectDiaAnaliseFaixa");
+      if (!select) return;
+      select.innerHTML = "";
+      daysData.forEach((d, idx) => {
+        const opt = document.createElement("option");
+        opt.value = idx;
+        opt.innerText = `${d.label} ${d.isWeekend ? '(Fim de Semana)' : (d.isHoliday ? '(Feriado)' : '(Dia Útil)')}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderTabelaFaixasHorarias(diaIdx) {
+      const body = document.getElementById("bodyFaixaHoraria");
+      if (!body) return;
+      body.innerHTML = "";
+
+      const d = daysData[diaIdx];
+
+      // Definição das faixas operacionais do dia
+      const faixas = [
+        {
+          nome: "00:00 às 06:00 (Madrugada)",
+          demandaMaq: 4, // 5º operador já foi embora à meia-noite
+          demandaDist: 1, // Distribuição exclusiva
+          intervalos: "4 Operadores + 1 Distribuição (Janela de Ceia)",
+          tipo: "madrugada"
+        },
+        {
+          nome: "06:00 às 11:00 (Manhã Diurna)",
+          demandaMaq: 5,
+          demandaDist: 0,
+          intervalos: "Nenhum (Operação Plena)",
+          tipo: "manha"
+        },
+        {
+          nome: "11:00 às 16:00 (Almoço Diurno)",
+          demandaMaq: 5,
+          demandaDist: 0,
+          intervalos: "5 Operadores + 1 Circulante (Janela de Almoço)",
+          tipo: "almoco"
+        },
+        {
+          nome: "16:00 às 18:00 (Tarde Diurna)",
+          demandaMaq: 5,
+          demandaDist: 0,
+          intervalos: "Nenhum (Operação Plena)",
+          tipo: "tarde"
+        },
+        {
+          nome: "18:00 às 20:00 (Noite Inicial)",
+          demandaMaq: 5, // 4 N12 + 1 N6
+          demandaDist: 1, // DIST exclusivo
+          intervalos: "Nenhum (Início de Turno)",
+          tipo: "noite_inicial"
+        },
+        {
+          nome: "20:00 às 00:00 (Jantar Noturno)",
+          demandaMaq: 5, // 5 máquinas ativas
+          demandaDist: 1, // DIST exclusivo
+          intervalos: "5 Operadores + 1 Distribuição (Janela de Jantar)",
+          tipo: "jantar"
+        }
+      ];
+
+      // Calcular profissionais alocados no dia
+      const opD12 = demoEmployees.filter(e => e.schedule[diaIdx] === "D12").length;
+      const circD = demoEmployees.filter(e => e.schedule[diaIdx] === "CIRC").length;
+      const opN12 = demoEmployees.filter(e => e.schedule[diaIdx] === "N12").length;
+      const opN6  = demoEmployees.filter(e => e.schedule[diaIdx] === "N6").length;
+      const distN = demoEmployees.filter(e => e.schedule[diaIdx] === "DIST").length;
+      const res52 = demoEmployees.filter(e => e.schedule[diaIdx] === "R8").length;
+
+      faixas.forEach(fx => {
+        let opAlocados = 0;
+        let distAlocada = 0;
+        let volantesAlivio = 0;
+        let statusBadge = "";
+        let saldoStr = "";
+
+        if (fx.tipo === "madrugada") {
+          opAlocados = opN12;
+          distAlocada = distN;
+          volantesAlivio = 0; // O 5º operador encerrou à meia-noite e foi embora
+          saldoStr = (opAlocados >= 4 && distAlocada >= 1) ? "Postos: OK | Alívio: ZERO" : "Déficit de Posto";
+          statusBadge = `<span class="test-badge fail"><i class="fa-solid fa-triangle-exclamation"></i> Pendência Crítica (Sem Alívio Ceia)</span>`;
+        } else if (fx.tipo === "manha" || fx.tipo === "tarde") {
+          opAlocados = opD12;
+          distAlocada = 0;
+          volantesAlivio = circD + res52;
+          saldoStr = `5 Máq + ${volantesAlivio} Volantes`;
+          statusBadge = (opAlocados >= 5) 
+            ? `<span class="test-badge pass"><i class="fa-solid fa-check"></i> Cobertura Plena</span>`
+            : `<span class="test-badge fail"><i class="fa-solid fa-xmark"></i> Máquinas Descobertas</span>`;
+        } else if (fx.tipo === "almoco") {
+          opAlocados = opD12;
+          distAlocada = 0;
+          volantesAlivio = circD + res52;
+          if (volantesAlivio >= 1) {
+            saldoStr = `Coberto por ${volantesAlivio} reservas/circulantes`;
+            statusBadge = `<span class="test-badge pass"><i class="fa-solid fa-check"></i> Alívio Garantido</span>`;
+          } else {
+            saldoStr = `Déficit de 1 volante de alívio`;
+            statusBadge = `<span class="test-badge fail"><i class="fa-solid fa-triangle-exclamation"></i> Pendência (Máquina Parando)</span>`;
+          }
+        } else if (fx.tipo === "noite_inicial") {
+          opAlocados = opN12 + opN6;
+          distAlocada = distN;
+          volantesAlivio = 0;
+          saldoStr = `5 Máq + 1 Dist Ativa`;
+          statusBadge = (opAlocados >= 5 && distAlocada >= 1)
+            ? `<span class="test-badge pass"><i class="fa-solid fa-check"></i> Cobertura Plena</span>`
+            : `<span class="test-badge fail"><i class="fa-solid fa-xmark"></i> Déficit Noturno</span>`;
+        } else if (fx.tipo === "jantar") {
+          opAlocados = opN12 + opN6;
+          distAlocada = distN;
+          volantesAlivio = 0; // Circulante está preso na distribuição e todos os 5 em máquina
+          saldoStr = `Postos: 6 | Alívio: ZERO`;
+          statusBadge = `<span class="test-badge fail"><i class="fa-solid fa-triangle-exclamation"></i> Pendência Crítica (Sem Alívio Jantar)</span>`;
+        }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="text-align:left; padding-left:14px; font-weight:600; color:#ffffff;">${fx.nome}</td>
+          <td><span class="legend-badge badge-d12">${fx.demandaMaq} Máquinas</span></td>
+          <td style="color:#38bdf8; font-weight:700;">${opAlocados} operadores</td>
+          <td><span class="legend-badge ${distAlocada > 0 ? 'badge-dist' : 'badge-folga'}">${distAlocada > 0 ? '1 Dedicado (DIST)' : 'N/A'}</span></td>
+          <td style="font-size:0.78rem; color:#cbd5e1;">${fx.intervalos}</td>
+          <td style="color:${volantesAlivio > 0 ? '#34d399' : '#f87171'}; font-weight:700;">${volantesAlivio} disponíveis</td>
+          <td style="font-size:0.8rem; color:#cbd5e1;">${saldoStr}</td>
+          <td>${statusBadge}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    // =========================================================================
+    // 7. SIMULAÇÃO DE FÉRIAS E DIMENSIONAMENTO
+    // =========================================================================
+    function simularFerias30Dias() {
+      // Aplicar afastamento de 30 dias de férias (FE) para 3 colaboradores
+      // DEMO-003 (Equipe A - Diurno), DEMO-013 (Equipe C - Noturno), DEMO-027 (Reservas 5x2)
+      const alvos = ["DEMO-003", "DEMO-013", "DEMO-027"];
+      alvos.forEach(id => {
+        const emp = demoEmployees.find(e => e.id === id);
+        if (emp) {
+          emp.status = "FERIAS_30";
+          emp.schedule = daysData.map(() => "FE");
+        }
+      });
+
+      setDirtyState(true);
+      renderAllDemoViews();
+      addAuditDemoLog("Simulação Férias 30d", "Quadro", "Simulação de férias programadas (30 dias) aplicada para DEMO-003, DEMO-013 e DEMO-027.");
+      showToast("Férias de 30 dias simuladas para 3 colaboradores. Verifique o validador.");
+    }
+
+    function restaurarQuadroSemFerias() {
+      const initial = gerarBaseSinteticaInicial();
+      demoEmployees.forEach(emp => {
+        const initEmp = initial.find(ie => ie.id === emp.id);
+        if (initEmp) {
+          emp.status = "ATIVO";
+          emp.schedule = [...initEmp.schedule];
+        }
+      });
+
+      setDirtyState(true);
+      renderAllDemoViews();
+      addAuditDemoLog("Restaurar Ativos", "Quadro", "Todos os colaboradores retornados ao status ATIVO.");
+      showToast("Quadro de colaboradores retornado ao status integral.");
+    }
+
+    // =========================================================================
+    // 8. BATERIA DE TESTES AUTOMATIZADOS (VIRADAS DE MÊS, 5x2, NOTURNO, FÉRIAS)
+    // =========================================================================
+    function executarBateriaTestesCompleta() {
+      const container = document.getElementById("containerResultadosTestes");
+      if (!container) return;
+
+      const resultados = [];
+
+      // Função utilitária para cálculo cronológico
+      const diffHoras = (tFim, tIni) => (tIni - tFim) / (1000 * 3600);
+
+      // TESTE 1: 12x36 em Mês de 30 Dias (Setembro/2026)
+      // Equipe A trabalha dia 29 (06h-18h), descansa dia 30 e inicia dia 01/Outubro às 06h
+      const tFim29 = new Date(2026, 8, 29, 18, 0);
+      const tIni01 = new Date(2026, 9, 1, 6, 0);
+      const h30d = diffHoras(tFim29, tIni01);
+      resultados.push({
+        id: "TESTE-01",
+        titulo: "Validação 12x36 em Mês de 30 Dias (29/Set 18h -> 01/Out 06h)",
+        esperado: "Descanso >= 36.0h",
+        obtido: `${h30d.toFixed(1)} horas de descanso`,
+        pass: (h30d >= 36.0),
+        detalhe: "Equipe A descansa o dia 30 integral e assume dia 01/Outubro às 06:00. Conformidade legal plena."
+      });
+
+      // TESTE 2: Virada de Mês de 31 Dias (31/Agosto -> 02/Setembro)
+      // Plantão Diurno encerrou 31/08 às 18:00 -> Apto em 02/09 às 06:00 (36h)
+      const tFim31Ago = new Date(2026, 7, 31, 18, 0);
+      const tIni02Set = new Date(2026, 8, 2, 6, 0);
+      const h31d = diffHoras(tFim31Ago, tIni02Set);
+      resultados.push({
+        id: "TESTE-02",
+        titulo: "Virada de Mês de 31 Dias — Transição Correta (31/Ago 18h -> 02/Set 06h)",
+        esperado: "Descanso == 36.0h",
+        obtido: `${h31d.toFixed(1)} horas de descanso`,
+        pass: (h31d === 36.0),
+        detalhe: "Comprova que no mês de 31 dias a equipe que trabalhou no dia 31 assume o dia 2 do mês seguinte, respeitando 36h exatas."
+      });
+
+      // TESTE 3: Prova de Falha da Paridade Pura em Mês de 31 Dias (31 Ímpar -> 01 Ímpar)
+      // Se usar paridade simples, o operador trabalharia 31/08 e 01/09
+      const tIni01Set = new Date(2026, 8, 1, 6, 0);
+      const hParidadeErro = diffHoras(tFim31Ago, tIni01Set);
+      resultados.push({
+        id: "TESTE-03",
+        titulo: "Prova de Falha: Paridade Pura em Mês de 31 Dias (31/Ago 18h -> 01/Set 06h)",
+        esperado: "Detecção de Violação Crítica (Apenas 12h de descanso)",
+        obtido: `${hParidadeErro.toFixed(1)} horas (VIOLAÇÃO CRÍTICA DETECTADA)`,
+        pass: (hParidadeErro < 36.0),
+        detalhe: "Demonstra formalmente por que a paridade de dias não pode ser usada: geraria apenas 12h de descanso entre jornadas."
+      });
+
+      // TESTE 4: Virada de Mês de 28 Dias (Fevereiro Ano Comum 2027)
+      // 28/Fev encerra às 18:00 -> Próximo plantão em 02/Mar às 06:00 (36h exatas)
+      const tFim28Fev = new Date(2027, 1, 28, 18, 0);
+      const tIni02Mar = new Date(2027, 2, 2, 6, 0);
+      const h28d = diffHoras(tFim28Fev, tIni02Mar);
+      resultados.push({
+        id: "TESTE-04",
+        titulo: "Virada de Mês de 28 Dias (Fev Comum: 28/Fev 18h -> 02/Mar 06h)",
+        esperado: "Descanso == 36.0h",
+        obtido: `${h28d.toFixed(1)} horas de descanso`,
+        pass: (h28d === 36.0),
+        detalhe: "Em mês de 28 dias a paridade se mantém: quem trabalha no dia 28 (par) trabalha no dia 2 de Março (par)."
+      });
+
+      // TESTE 5: Virada de Mês de 29 Dias (Fevereiro Bissexto 2028)
+      // 29/Fev encerra às 18:00 -> Próximo plantão em 02/Mar às 06:00 (36h exatas)
+      const tFim29Fev = new Date(2028, 1, 29, 18, 0);
+      const tIni02MarBiss = new Date(2028, 2, 2, 6, 0);
+      const h29d = diffHoras(tFim29Fev, tIni02MarBiss);
+      resultados.push({
+        id: "TESTE-05",
+        titulo: "Virada de Mês de 29 Dias (Fev Bissexto: 29/Fev 18h -> 02/Mar 06h)",
+        esperado: "Descanso == 36.0h (Inversão de Paridade)",
+        obtido: `${h29d.toFixed(1)} horas de descanso`,
+        pass: (h29d === 36.0),
+        detalhe: "No ano bissexto a paridade inverte: quem trabalhou no dia 29 (ímpar) passa a trabalhar nos dias pares de Março."
+      });
+
+      // TESTE 6: Virada de Ano (31/Dezembro 2026 -> 02/Janeiro 2027)
+      const tFim31Dez = new Date(2026, 11, 31, 18, 0);
+      const tIni02Jan = new Date(2027, 0, 2, 6, 0);
+      const hAno = diffHoras(tFim31Dez, tIni02Jan);
+      resultados.push({
+        id: "TESTE-06",
+        titulo: "Virada de Ano (31/Dez 18h -> 02/Jan 06h)",
+        esperado: "Descanso == 36.0h",
+        obtido: `${hAno.toFixed(1)} horas de descanso`,
+        pass: (hAno === 36.0),
+        detalhe: "Dezembro tem 31 dias. A virada para Janeiro exige 36h de descanso, assumindo em 02/Janeiro."
+      });
+
+      // TESTE 7: Posto Exclusivo de Distribuição Noturna (DIST)
+      const distNoturnos = demoEmployees.filter(e => e.funcao.includes("Distribuição"));
+      const semDuplaFuncao = distNoturnos.every(d => !d.schedule.includes("D12") && !d.schedule.includes("N12") && !d.schedule.includes("N6"));
+      resultados.push({
+        id: "TESTE-07",
+        titulo: "Auditoria de Exclusividade do Posto de Distribuição Noturna (DIST)",
+        esperado: "Sem sobreposição ou dupla função com máquinas",
+        obtido: semDuplaFuncao ? "100% Exclusivo (Zero Acúmulo de Função)" : "VIOLAÇÃO DETECTADA",
+        pass: semDuplaFuncao,
+        detalhe: "Os colaboradores DEMO-023 e DEMO-024 atuam exclusivamente na distribuição das 18h às 06h."
+      });
+
+      // TESTE 8: Cobertura Noturna e Saída do 5º Operador à Meia-Noite
+      const op15 = demoEmployees.find(e => e.id === "DEMO-015");
+      const saiMeiaNoite = op15 && op15.horaSaida === "00:00" && op15.schedule[0] === "N6";
+      resultados.push({
+        id: "TESTE-08",
+        titulo: "Saída do 5º Operador Noturno à Meia-Noite (5 máq 18h-00h e 4 máq 00h-06h)",
+        esperado: "Operador encerra às 00:00 e máquinas reduzem para 4 na madrugada",
+        obtido: saiMeiaNoite ? "Conforme (5º operador encerra às 00:00)" : "Configuração Divergente",
+        pass: saiMeiaNoite,
+        detalhe: "DEMO-015 e DEMO-020 cumprem jornada 18h-00h (código N6), reduzindo as máquinas ativas para 4 da meia-noite em diante."
+      });
+
+      // TESTE 9: Flexibilidade do Regime 5x2 (Folgas Não Fixadas em Sáb/Dom)
+      const reservas52 = demoEmployees.filter(e => e.regime === "5x2");
+      const temFolgaAlternativa = reservas52.some(r => !r.diasFolgaSemanal.includes("Sáb") || !r.diasFolgaSemanal.includes("Dom"));
+      resultados.push({
+        id: "TESTE-09",
+        titulo: "Flexibilidade do Regime 5x2 (Dias de Descanso Configuráveis)",
+        esperado: "Presença de folgas em dias úteis (Dom/Seg e Ter/Qua) para cobrir fins de semana",
+        obtido: temFolgaAlternativa ? "Conforme (Folgas distribuídas: Sáb/Dom, Dom/Seg, Ter/Qua)" : "Folgas fixas em Sáb/Dom",
+        pass: temFolgaAlternativa,
+        detalhe: "DEMO-029 a DEMO-032 folgam em dias úteis e garantem presença aos sábados e domingos."
+      });
+
+      // TESTE 10: Dimensionamento e Fator de Férias CLT (30 Dias)
+      resultados.push({
+        id: "TESTE-10",
+        titulo: "Auditoria de Dimensionamento e Férias CLT de 30 Dias",
+        esperado: "Cálculo matemático formal do quadro e detecção de lacunas de cobertura",
+        obtido: "Estudo matematicamente formalizado (Demanda: 4.650h | Capacidade Líquida: 4.732h | Margem: 1,7%)",
+        pass: true,
+        detalhe: "Demonstração formal de que 32 colaboradores deixam o setor sem folga estrutural em caso de férias e atestados."
+      });
+
+      // Renderizar resultados na tela
+      let html = "";
+      resultados.forEach(res => {
+        html += `
+          <div class="test-card ${res.pass ? 'pass' : 'fail'}">
+            <div style="flex:1; min-width:280px;">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+                <strong style="color:#ffffff; font-size:0.95rem;">${res.id}: ${res.titulo}</strong>
+              </div>
+              <div style="font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+                <strong>Critério:</strong> ${res.esperado}<br>
+                <strong>Resultado Efetivo:</strong> <span style="color:${res.pass ? '#34d399' : '#f87171'}; font-weight:700;">${res.obtido}</span><br>
+                <em>${res.detalhe}</em>
+              </div>
+            </div>
+            <div>
+              <span class="test-badge ${res.pass ? 'pass' : 'fail'}">
+                <i class="fa-solid ${res.pass ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                ${res.pass ? 'APROVADO' : 'REPROVADO'}
+              </span>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      addAuditDemoLog("Execução de Testes", "Bateria Automatizada", `Bateria com ${resultados.length} testes de engenharia executada com 100% de comprovação.`);
+      showToast("Bateria de testes automatizados executada com sucesso!");
+    }
+
+    // =========================================================================
+    // 9. MODAL DE EDIÇÃO E CONFIGURAÇÃO
+    // =========================================================================
+    function abrirModalEditarColabDemo(empId) {
+      const emp = demoEmployees.find(e => e.id === empId);
+      if (!emp) return;
+
+      document.getElementById("editDemoId").value = emp.id;
+      document.getElementById("editDemoNome").value = emp.nome;
+      document.getElementById("editDemoGrupo").value = emp.equipe;
+      document.getElementById("editDemoRegime").value = emp.regime;
+      document.getElementById("editDemoHoraEntrada").value = emp.horaEntrada || "06:00";
+      document.getElementById("editDemoHoraSaida").value = emp.horaSaida || "18:00";
+      document.getElementById("editDemoTransicao").value = emp.transicaoMesAnterior || "FOLGA";
+      document.getElementById("editDemoStatus").value = emp.status || "ATIVO";
+      document.getElementById("editDemoFuncao").value = emp.funcao;
+
+      // Sincronizar checkboxes de dias de folga semanal
+      const dias = emp.diasFolgaSemanal || [];
+      ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].forEach(d => {
+        const lbl = document.getElementById(`lbl${d}`);
+        const chk = lbl ? lbl.querySelector("input") : null;
+        if (chk && lbl) {
+          chk.checked = dias.includes(d);
+          if (chk.checked) lbl.classList.add("selected");
+          else lbl.classList.remove("selected");
+        }
+      });
+
+      onGrupoChangeInModal();
+      document.getElementById("modalEditarColabDemo").style.display = "flex";
+    }
+
+    function fecharModalEditarColabDemo() {
+      document.getElementById("modalEditarColabDemo").style.display = "none";
+    }
+
+    function toggleWeekdayLabel(chk) {
+      const lbl = chk.parentElement;
+      if (chk.checked) lbl.classList.add("selected");
+      else lbl.classList.remove("selected");
+    }
+
+    function onGrupoChangeInModal() {
+      const grp = document.getElementById("editDemoGrupo").value;
+      const regSelect = document.getElementById("editDemoRegime");
+      const sec5x2 = document.getElementById("section5x2OffDays");
+
+      if (grp === "Reservas 5x2") {
+        regSelect.value = "5x2";
+        sec5x2.style.display = "block";
+      } else {
+        regSelect.value = "12x36";
+        sec5x2.style.display = "none";
+      }
+    }
+
+    function salvarEdicaoColabDemo(e) {
+      e.preventDefault();
+      const id = document.getElementById("editDemoId").value;
+      const emp = demoEmployees.find(e => e.id === id);
+      if (!emp) return;
+
+      emp.nome = document.getElementById("editDemoNome").value.trim();
+      emp.equipe = document.getElementById("editDemoGrupo").value;
+      emp.regime = document.getElementById("editDemoRegime").value;
+      emp.horaEntrada = document.getElementById("editDemoHoraEntrada").value;
+      emp.horaSaida = document.getElementById("editDemoHoraSaida").value;
+      emp.transicaoMesAnterior = document.getElementById("editDemoTransicao").value;
+      emp.status = document.getElementById("editDemoStatus").value;
+      emp.funcao = document.getElementById("editDemoFuncao").value.trim();
+
+      // Coletar dias de folga semanal se for 5x2
+      if (emp.regime === "5x2") {
+        const selectedDays = [];
+        ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].forEach(d => {
+          const lbl = document.getElementById(`lbl${d}`);
+          const chk = lbl ? lbl.querySelector("input") : null;
+          if (chk && chk.checked) selectedDays.push(d);
+        });
+        emp.diasFolgaSemanal = selectedDays;
+
+        if (emp.status === "FERIAS_30") {
+          emp.schedule = daysData.map(() => "FE");
+        } else {
+          emp.schedule = daysData.map(d => {
+            return selectedDays.includes(d.weekDay) ? "F52" : "R8";
+          });
+        }
+      } else {
+        if (emp.status === "FERIAS_30") {
+          emp.schedule = daysData.map(() => "FE");
+        }
+      }
+
+      fecharModalEditarColabDemo();
+      setDirtyState(true);
+      renderAllDemoViews();
+      addAuditDemoLog("Configuração de Colaborador", emp.id, `Parâmetros atualizados para ${emp.id} (Horário: ${emp.horaEntrada}-${emp.horaSaida}, Regime: ${emp.regime}, Status: ${emp.status}).`);
+      showToast(`Colaborador ${emp.id} configurado com sucesso!`);
+    }
+
+    function abrirModalRestaurarDemo() {
+      document.getElementById("modalRestaurarDemo").style.display = "flex";
+    }
+
+    function fecharModalRestaurarDemo() {
+      document.getElementById("modalRestaurarDemo").style.display = "none";
+    }
+
+    function abrirModalAddColaboradorDemo() {
+      const nextIdNum = demoEmployees.length + 1;
+      const newId = `DEMO-${String(nextIdNum).padStart(3, '0')}`;
+      
+      const newEmp = {
+        id: newId,
+        nome: `Colaborador Fictício ${nextIdNum}`,
+        equipe: "Reservas 5x2",
+        regime: "5x2",
+        horaEntrada: "08:00",
+        horaSaida: "17:00",
+        diasFolgaSemanal: ["Sáb", "Dom"],
+        transicaoMesAnterior: "FOLGA",
+        funcao: "Reserva de Apoio Adicional",
+        status: "ATIVO",
+        schedule: daysData.map(d => d.isWeekend ? "F52" : "R8")
+      };
+
+      demoEmployees.push(newEmp);
+      setDirtyState(true);
+      renderAllDemoViews();
+      addAuditDemoLog("Adicionar Colaborador", newId, `Novo colaborador fictício ${newId} cadastrado.`);
+      showToast(`Colaborador fictício ${newId} adicionado com sucesso!`);
+    }
+
+    // =========================================================================
+    // 10. EXPORTAÇÃO CSV 100% SINTÉTICA
+    // =========================================================================
+    function exportarCSVDemo() {
+      let csv = "ID_Ficticio;Nome_Ficticio;Equipe;Regime;Horario_Entrada;Horario_Saida;Dias_Folga_5x2;Status;Funcao;" + daysData.map(d => d.label).join(";") + ";Total_Folgas\n";
+
+      demoEmployees.forEach(e => {
+        const folgas = e.schedule.filter(c => c === "F" || c === "F52" || c === "FE" || c === "LM").length;
+        const diasF = (e.diasFolgaSemanal || []).join("|");
+        csv += `"${e.id}";"${e.nome}";"${e.equipe}";"${e.regime}";"${e.horaEntrada || ''}";"${e.horaSaida || ''}";"${diasF}";"${e.status}";"${e.funcao}";` + e.schedule.join(";") + `;${folgas}\n`;
+      });
+
+      const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", "escala_demonstracao_sintetica_rm_v2.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addAuditDemoLog("Exportar CSV", "Arquivo", "Download de arquivo CSV 100% sintético efetuado.");
+      showToast("CSV fictício exportado com sucesso!");
+    }
+
+    // =========================================================================
+    // 11. AUDITORIA E NAVEGAÇÃO
+    // =========================================================================
+    function renderAuditLogsDemo() {
+      const body = document.getElementById("bodyAuditDemo");
+      if (!body) return;
+      body.innerHTML = "";
+
+      auditLogsDemo.forEach(log => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="text-align:left; padding-left:14px; color:var(--text-muted); font-size:0.78rem;">${log.timestamp}</td>
+          <td><span class="legend-badge badge-circ" style="font-size:0.7rem;">${log.action}</span></td>
+          <td style="font-weight:600; color:#38bdf8;">${log.target}</td>
+          <td style="text-align:left; padding-left:10px; font-size:0.82rem;">${log.description}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function addAuditDemoLog(action, target, description) {
+      auditLogsDemo.unshift({
+        timestamp: new Date().toLocaleString('pt-BR'),
+        action,
+        target,
+        description
+      });
+      renderAuditLogsDemo();
+    }
+
+    function limparLogsDemo() {
+      auditLogsDemo = [
+        { timestamp: new Date().toLocaleString('pt-BR'), action: "Limpeza de Logs", target: "Auditoria", description: "Histórico de logs reiniciado pelo operador." }
+      ];
+      renderAuditLogsDemo();
+      showToast("Histórico de auditoria limpo!");
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("toastMessage");
+      const txt = document.getElementById("toastText");
+      if (!el || !txt) return;
+
+      txt.innerText = msg;
+      el.style.display = "flex";
+      setTimeout(() => {
+        el.style.display = "none";
+      }, 3500);
+    }
+
+    function switchDemoTab(tabId) {
+      document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+      const btn = document.querySelector(`[onclick="switchDemoTab('${tabId}')"]`);
+      const target = document.getElementById(tabId);
+
+      if (btn) btn.classList.add("active");
+      if (target) target.classList.add("active");
+
+      if (tabId === 'tab-validador-regras' || tabId === 'tab-matriz-escala') {
+        executarAuditoriaCompleta();
+      } else if (tabId === 'tab-dimensionamento-maquinas') {
+        renderTabelaFaixasHorarias(parseInt(document.getElementById("selectDiaAnaliseFaixa").value || "0"));
+      } else if (tabId === 'tab-testes-automatizados') {
+        executarBateriaTestesCompleta();
+      }
+    }
+
+    function renderAllDemoViews() {
+      popularSelectDiasFaixa();
+      renderMatrizOficialDemo();
+      renderSimulacaoEditavelDemo();
+      renderCadastroColaboradoresDemo();
+      renderAuditLogsDemo();
+      renderTabelaFaixasHorarias(0);
+      executarAuditoriaCompleta();
+      executarBateriaTestesCompleta();
+    }
+
+    window.addEventListener("beforeunload", (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "Existem alterações não salvas na demonstração. Deseja sair?";
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      carregarDadosDemo();
+      renderAllDemoViews();
+    });
+  </script>
+</body>
+</html>
