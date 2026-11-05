@@ -163,6 +163,12 @@
       transition: all 0.2s ease;
     }
 
+    .save-indicator-badge.initial {
+      background: rgba(148, 163, 184, 0.15);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
     .save-indicator-badge.saved {
       background: rgba(16, 185, 129, 0.15);
       color: #34d399;
@@ -173,6 +179,13 @@
       background: rgba(245, 158, 11, 0.15);
       color: #fbbf24;
       border: 1px solid rgba(245, 158, 11, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    .save-indicator-badge.error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
       animation: pulse 1.5s infinite;
     }
 
@@ -567,9 +580,9 @@
 
     <div class="btn-group">
       <!-- Save Indicator Badge -->
-      <div id="saveStatusIndicator" class="save-indicator-badge saved" title="Status de persistência local">
-        <i class="fa-solid fa-circle-check" id="saveStatusIcon"></i>
-        <span id="saveStatusText">Salvo Localmente</span>
+      <div id="saveStatusIndicator" class="save-indicator-badge initial" title="Base sintética padrão em memória. Nenhuma alteração foi salva no navegador ainda.">
+        <i class="fa-solid fa-database" id="saveStatusIcon"></i>
+        <span id="saveStatusText">Base Inicial (Não Gravada)</span>
       </div>
 
       <!-- Action Buttons -->
@@ -1366,45 +1379,95 @@
     ];
 
     // =========================================================================
-    // 3. PERSISTÊNCIA LOCAL COM DIRTY STATE
     // =========================================================================
-    function setDirtyState(dirty) {
-      hasUnsavedChanges = dirty;
+    // 3. PERSISTÊNCIA LOCAL COM CONTROLE DE ESTADOS (ESTRITAMENTE MANUAL)
+    // =========================================================================
+    function setSaveStatus(status, detail = null) {
       const indicator = document.getElementById("saveStatusIndicator");
       const icon = document.getElementById("saveStatusIcon");
       const text = document.getElementById("saveStatusText");
 
       if (!indicator || !icon || !text) return;
 
-      if (dirty) {
+      if (status === 'dirty') {
+        hasUnsavedChanges = true;
         indicator.className = "save-indicator-badge dirty";
         icon.className = "fa-solid fa-triangle-exclamation";
         text.innerText = "Alterações Não Salvas";
-        indicator.title = "Clique em 'Salvar Alterações' para gravar os dados localmente.";
-      } else {
+        indicator.title = "Existem modificações não salvas. Clique em 'Salvar Alterações' para gravar localmente.";
+      } else if (status === 'saved') {
+        hasUnsavedChanges = false;
         indicator.className = "save-indicator-badge saved";
         icon.className = "fa-solid fa-circle-check";
-        text.innerText = "Salvo Localmente";
-        indicator.title = "Dados gravados no localStorage deste navegador.";
+        text.innerText = detail ? `Salvo (${detail})` : "Salvo Localmente";
+        indicator.title = `Dados gravados e verificados com sucesso no navegador${detail ? ' às ' + detail : ''}.`;
+      } else if (status === 'error') {
+        hasUnsavedChanges = true; // Mantém aviso para evitar perda acidental
+        indicator.className = "save-indicator-badge error";
+        icon.className = "fa-solid fa-circle-xmark";
+        text.innerText = "Erro ao Salvar";
+        indicator.title = detail ? `Falha na gravação: ${detail}` : "Falha na gravação local.";
+      } else { // 'initial'
+        hasUnsavedChanges = false;
+        indicator.className = "save-indicator-badge initial";
+        icon.className = "fa-solid fa-database";
+        text.innerText = "Base Inicial (Não Gravada)";
+        indicator.title = "Base sintética padrão em memória. Nenhuma alteração foi salva no navegador ainda.";
+      }
+    }
+
+    function setDirtyState(dirty) {
+      if (dirty) {
+        setSaveStatus('dirty');
+      } else {
+        // Chamadas com false não marcam como salvo automaticamente.
+        // Apenas preservam o estado não-dirty correto: 'saved' se houver gravação comprovada no localStorage, ou 'initial' caso contrário.
+        try {
+          const hasSavedData = !!localStorage.getItem(DEMO_STORAGE_KEY);
+          setSaveStatus(hasSavedData ? 'saved' : 'initial');
+        } catch (e) {
+          setSaveStatus('initial');
+        }
       }
     }
 
     function salvarAlteracoesDemo() {
       try {
+        // 1. Registra no histórico ANTES de serializar para constar no payload gravado
+        addAuditDemoLog("Salvar Alterações", "Matriz", "Dados fictícios da demonstração gravados no localStorage deste navegador.");
+
+        // 2. Prepara payload preservando rigorosamente DEMO_VERSION
         const payload = {
           version: DEMO_VERSION,
           timestamp: new Date().toISOString(),
           employees: demoEmployees,
           auditLogs: auditLogsDemo.slice(0, 50)
         };
-        localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(payload));
-        setDirtyState(false);
-        addAuditDemoLog("Salvar Alterações", "Matriz", "Dados fictícios da demonstração gravados no localStorage deste navegador.");
-        showToast("Alterações da demonstração salvas no navegador com sucesso!");
-        executarAuditoriaCompleta();
+
+        const jsonString = JSON.stringify(payload);
+
+        // 3. Gravação no localStorage
+        localStorage.setItem(DEMO_STORAGE_KEY, jsonString);
+
+        // 4. Write-Check integral com leitura imediata e conferência de caracteres
+        const recuperado = localStorage.getItem(DEMO_STORAGE_KEY);
+        if (recuperado !== jsonString) {
+          throw new Error("Divergência de integridade: os dados lidos do armazenamento diferem do JSON gravado.");
+        }
+
+        // 5. Sucesso confirmado
+        const horaStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        setSaveStatus('saved', horaStr);
+        showToast(`Alterações da demonstração salvas com sucesso! (${horaStr})`);
       } catch (e) {
-        console.error("Erro ao salvar:", e);
-        showToast("Falha ao gravar no navegador local.");
+        console.error("Falha ao salvar demonstração:", e);
+        const msgErro = e && e.name === 'QuotaExceededError'
+          ? "Cota de armazenamento do navegador excedida."
+          : (e && e.message ? e.message : "Falha na gravação local.");
+
+        setSaveStatus('error', msgErro);
+        alert(`FALHA AO SALVAR: ${msgErro}\n\nSuas alterações permanecem apenas na memória da página. Não feche nem recarregue a aba.`);
+        showToast(`Erro ao salvar no navegador: ${msgErro}`);
       }
     }
 
@@ -1413,32 +1476,54 @@
         const raw = localStorage.getItem(DEMO_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (parsed && parsed.version === DEMO_VERSION && Array.isArray(parsed.employees)) {
+          // Validação explícita de DEMO_VERSION
+          if (parsed && parsed.version === DEMO_VERSION && Array.isArray(parsed.employees) && parsed.employees.length > 0) {
             demoEmployees = parsed.employees;
             if (Array.isArray(parsed.auditLogs)) auditLogsDemo = parsed.auditLogs;
-            setDirtyState(false);
+            setSaveStatus('saved');
             return true;
+          } else if (parsed && parsed.version && parsed.version !== DEMO_VERSION) {
+            console.warn(`Versão incompatível no localStorage (${parsed.version}). Esperada: ${DEMO_VERSION}. Carregando base sintética padrão.`);
+            showToast(`Aviso: Dados salvos no navegador pertencem a outra versão (${parsed.version}). Carregada base sintética padrão.`);
+            addAuditDemoLog("Aviso Versão", "Sistema", `Dados no localStorage com versão '${parsed.version}' ignorados por incompatibilidade com ${DEMO_VERSION}.`);
+          } else {
+            console.warn("Estrutura de dados corrompida no localStorage. Carregando base sintética padrão.");
+            showToast("Aviso: Dados gravados inválidos no navegador. Carregando base sintética padrão.");
           }
         }
       } catch (e) {
-        console.warn("Recuperação falhou. Carregando padrão.", e);
+        console.warn("Recuperação falhou. Carregando base sintética padrão.", e);
+        showToast("Aviso: Falha ao ler dados locais. Carregando base sintética padrão.");
       }
+
       demoEmployees = gerarBaseSinteticaInicial();
-      setDirtyState(false);
+      setSaveStatus('initial');
       return false;
     }
 
     function efetivarRestauracaoDemo() {
-      localStorage.removeItem(DEMO_STORAGE_KEY);
+      try {
+        localStorage.removeItem(DEMO_STORAGE_KEY);
+        if (localStorage.getItem(DEMO_STORAGE_KEY) !== null) {
+          throw new Error("O navegador não permitiu remover a chave de persistência local.");
+        }
+      } catch (e) {
+        console.error("Falha ao remover dados do localStorage:", e);
+        const msgErro = e && e.message ? e.message : "Erro desconhecido ao limpar armazenamento local.";
+        alert(`FALHA NA RESTAURAÇÃO: Não foi possível limpar os dados gravados no navegador (${msgErro}).\n\nOs dados salvos anteriormente continuam armazenados e podem ser recarregados. A restauração foi cancelada.`);
+        showToast(`Erro ao limpar dados salvos: ${msgErro}`);
+        fecharModalRestaurarDemo();
+        return; // Interrompe: não modifica memória nem apresenta sucesso
+      }
+
       demoEmployees = gerarBaseSinteticaInicial();
       fecharModalRestaurarDemo();
-      setDirtyState(false);
+      setSaveStatus('initial');
       renderAllDemoViews();
       addAuditDemoLog("Restaurar Padrão", "Sistema", "Configurações e escalas padrão da demonstração restauradas.");
-      showToast("Dados padrão da demonstração restaurados!");
+      showToast("Dados padrão da demonstração restaurados com sucesso!");
     }
 
-    // =========================================================================
     // 4. MOTOR DE VALIDAÇÃO TEMPORAL (INTERVALO REAL DE 36H & COBERTURA NOTURNA)
     // =========================================================================
     function extrairHorasPlantao(emp, code) {
@@ -2415,10 +2500,11 @@
 
     function limparLogsDemo() {
       auditLogsDemo = [
-        { timestamp: new Date().toLocaleString('pt-BR'), action: "Limpeza de Logs", target: "Auditoria", description: "Histórico de logs reiniciado pelo operador." }
+        { timestamp: new Date().toLocaleString('pt-BR'), action: "Limpeza de Logs", target: "Auditoria", description: "Histórico de auditoria reiniciado pelo operador." }
       ];
+      setSaveStatus('dirty');
       renderAuditLogsDemo();
-      showToast("Histórico de auditoria limpo!");
+      showToast("Histórico de auditoria reiniciado (salve as alterações para persistir).");
     }
 
     function showToast(msg) {
